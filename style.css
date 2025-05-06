@@ -273,3 +273,68 @@ body {
 .login-register p a:hover{
   text-decoration: underline;
 }
+
+/* General styling for the post section */
+.post-section {
+  background-color: #f9f9f9;
+  padding: 20px;
+  margin: 80px auto 20px;
+  max-width: 600px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Heading styling */
+.post-section h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Form styling */
+.post-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Label styling */
+.post-form label {
+  font-size: 16px;
+  color: #555;
+  text-align: left;
+}
+
+/* Input and textarea styling */
+.post-form input[type="text"],
+.post-form textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.post-form input[type="text"]:focus,
+.post-form textarea:focus {
+  border-color: #007BFF;
+}
+
+/* Button styling */
+.post-form button {
+  padding: 10px 15px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #007BFF;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.post-form button:hover {
+  background-color: #0056b3;
+}
