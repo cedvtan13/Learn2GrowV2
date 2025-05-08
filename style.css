@@ -131,6 +131,7 @@ body {
   width: calc(100% - 58%);
   height: 100%;
   overflow: hidden;
+  
 }
 
 .logreg-box .form-box {
@@ -145,21 +146,23 @@ body {
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
   color: #e4e4e4;
+  padding: 40px;
 }
 
 .logreg-box .form-box.login{
   transform: translateX(0);
   transition: transform 0.6s ease;
   transition-delay: 0s;
+  z-index: 1;
 }
 
 .logreg-box.active .form-box.login{
-  transform: translateX(430px);
+  transform: translateX(-100%);
   transition-delay: 0s;
 }
 
 .logreg-box .form-box.register{
-  transform: translateX(430px);
+  transform: translateX(100%);
   transition: transform 0.6s ease;
   transition-delay: 0s;
 }
@@ -167,6 +170,7 @@ body {
 .logreg-box.active .form-box.register{
   transform: translateX(0);
   transition-delay: 0s;
+  z-index: 1;
 }
 
 .form-box h2{
@@ -429,4 +433,193 @@ body {
 
 .team-member a:hover {
   text-decoration: underline;
+}
+
+/* Responsive CSS for Mobile Devices */
+@media screen and (max-width: 991px) {
+  .header {
+    padding: 15px 5%;
+  }
+  
+  .navbar a {
+    margin-right: 15px;
+    font-size: 14px;
+  }
+  
+  .container {
+    width: 85%;
+  }
+  
+  .container .content {
+    padding: 40px;
+  }
+  
+  .text-sci h2 {
+    font-size: 32px;
+  }
+  
+  .text-sci h2 span {
+    font-size: 22px;
+  }
+  
+  .text-sci p {
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .container {
+    width: 90%;
+    height: auto;
+    min-height: 600px;
+  }
+  
+  .container .content {
+    width: 100%;
+    left: 0;
+    padding: 30px;
+    flex-direction: column-reverse;
+    position: relative;
+    height: auto;
+    padding-bottom: 0;
+  }
+  
+  .text-sci {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .social-icons {
+    justify-content: center;
+    display: flex;
+    margin-top: 20px;
+  }
+  
+  .container .logreg-box {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    height: auto;
+    padding: 30px;
+    margin-top: 20px;
+  }
+  
+  .logreg-box .form-box {
+    position: relative;
+    border-radius: 10px;
+    padding: 30px 20px;
+    height: auto;
+  }
+  
+  .logreg-box .form-box.login,
+  .logreg-box .form-box.register,
+  .logreg-box.active .form-box.login,
+  .logreg-box.active .form-box.register {
+    left: 0;
+    transform: translateX(0);
+    transition: none;
+  }
+  
+  .logreg-box .form-box.login {
+    display: block;
+  }
+  
+  .logreg-box .form-box.register {
+    display: none;
+  }
+  
+  .logreg-box.active .form-box.login {
+    display: none;
+  }
+  
+  .logreg-box.active .form-box.register {
+    display: block;
+  }
+  
+  .form-box .input-box {
+    width: 100%;
+    max-width: 300px;
+    margin: 20px auto;
+  }
+  
+  .about, .team {
+    margin: 100px auto 30px;
+    width: 90%;
+    padding: 20px;
+  }
+  
+  .team-member {
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .post-section {
+    width: 90%;
+    padding: 15px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .header {
+    padding: 10px 5%;
+  }
+  
+  .navbar a {
+    margin-right: 8px;
+    font-size: 13px;
+  }
+  
+  .content .logo {
+    font-size: 24px;
+    text-align: center;
+  }
+  
+  .text-sci h2 {
+    font-size: 26px;
+  }
+  
+  .text-sci h2 span {
+    font-size: 18px;
+  }
+  
+  .text-sci p {
+    font-size: 13px;
+  }
+  
+  .form-box h2 {
+    font-size: 24px;
+  }
+  
+  .input-box input {
+    font-size: 14px;
+  }
+  
+  .input-box label {
+    font-size: 14px;
+  }
+  
+  .remember-forgot {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .btn {
+    font-size: 16px;
+    height: 45px;
+  }
+  
+  .about h1 {
+    font-size: 26px;
+  }
+  
+  .about article p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  .team h2 {
+    font-size: 24px;
+  }
 }
