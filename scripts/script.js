@@ -815,3 +815,9 @@ function initializeProfilePage() {
     });
   }
 }
+// Quick amount selection functionality
+            document.querySelectorAll('.amount-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.getElementById('cash').value = this.dataset.amount;
+                });
+            });
