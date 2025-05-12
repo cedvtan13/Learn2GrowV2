@@ -346,56 +346,163 @@ function checkUrlForPostId() {
 
 // Initialize posts page
 function initializePostsPage() {
-  const postsContainer = document.getElementById('posts-container');
+  const postsContainer = document.getElementById('postsContainer');
+  const noPostsMessage = document.getElementById('no-posts-message');
   if (!postsContainer) return;
   
   const posts = JSON.parse(localStorage.getItem('posts')) || [];
   const currentUser = getCurrentUser();
   
+  // Handle the display of posts or no posts message
   if (posts.length === 0) {
-    postsContainer.innerHTML = '<div class="no-posts">No posts yet. Be the first to share!</div>';
-    return;
+    if (noPostsMessage) noPostsMessage.style.display = 'block';
+  } else {
+    if (noPostsMessage) noPostsMessage.style.display = 'none';
+    
+    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    postsContainer.innerHTML = '';
+    posts.forEach(post => {
+      const postElement = createPostElement(post, currentUser);
+      postsContainer.appendChild(postElement);
+    });
   }
   
-  posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-  
-  postsContainer.innerHTML = '';
-  posts.forEach(post => {
-    const postElement = createPostElement(post, currentUser);
-    postsContainer.appendChild(postElement);
-  });
-  
-  const postForm = document.getElementById('post-form');
-  if (postForm) {
-    postForm.addEventListener('submit', function(e) {
+  // Handle the post creation form
+  const storyForm = document.getElementById('storyForm');
+  if (storyForm) {
+    storyForm.addEventListener('submit', function(e) {
       e.preventDefault();
       
+      const title = document.getElementById('post-title').value;
       const content = document.getElementById('post-content').value;
-      if (content.trim() === '') return;
+      const targetAmount = document.getElementById('target-amount').value;
       
-      const newPost = {
-        id: Date.now(),
-        author: currentUser.name,
-        authorEmail: currentUser.email,
-        content: content,
-        date: new Date().toISOString(),
-        likes: 0,
-        comments: []
-      };
+      if (title.trim() === '' || content.trim() === '') {
+        alert('Please enter both a title and content for your story.');
+        return;
+      }
       
-      posts.unshift(newPost);
-      localStorage.setItem('posts', JSON.stringify(posts));
+      // Variables to store image and QR code
+      let imageUrl = null;
+      let qrCodeUrl = null;
+      let pendingUploads = 0;
       
-      const postElement = createPostElement(newPost, currentUser);
-      postsContainer.prepend(postElement);
+      // Process post image if provided
+      const imageInput = document.getElementById('post-image');
+      if (imageInput.files && imageInput.files[0]) {
+        pendingUploads++;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imageUrl = e.target.result;
+          pendingUploads--;
+          if (pendingUploads === 0) {
+            // All uploads complete, now create the post
+            createPost();
+          }
+        };
+        reader.readAsDataURL(imageInput.files[0]);
+      }
       
-      document.getElementById('post-content').value = '';
+      // Process GCash QR code if provided
+      const qrCodeInput = document.getElementById('gcash-qr');
+      if (qrCodeInput.files && qrCodeInput.files[0]) {
+        pendingUploads++;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          qrCodeUrl = e.target.result;
+          pendingUploads--;
+          if (pendingUploads === 0) {
+            // All uploads complete, now create the post
+            createPost();
+          }
+        };
+        reader.readAsDataURL(qrCodeInput.files[0]);
+      }
+      
+      // If no files to upload, create post immediately
+      if (pendingUploads === 0) {
+        createPost();
+      }
+      
+      // Create the post with all data
+      function createPost() {
+        const newPost = {
+          id: Date.now(),
+          title: title,
+          author: currentUser.name,
+          authorEmail: currentUser.email,
+          content: content,
+          date: new Date().toISOString(),
+          targetAmount: parseFloat(targetAmount) || 0,
+          amountRaised: 0,
+          imageUrl: imageUrl,
+          qrCodeUrl: qrCodeUrl,
+          likes: 0,
+          comments: []
+        };
+        
+        // Add the new post to the array and save to localStorage
+        posts.unshift(newPost);
+        localStorage.setItem('posts', JSON.stringify(posts));
+        
+        // Create and display the new post element
+        if (noPostsMessage) noPostsMessage.style.display = 'none';
+        const postElement = createPostElement(newPost, currentUser);
+        postsContainer.prepend(postElement);
+        
+        // Reset form fields
+        storyForm.reset();
+        document.getElementById('imagePreviewContainer').innerHTML = '';
+        document.getElementById('qrPreviewContainer').innerHTML = '';
+        
+        alert('Your story has been successfully posted!');
+      }
+    });
+  }
+  
+  // Set up image preview functionality
+  const postImageInput = document.getElementById('post-image');
+  const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+  
+  if (postImageInput && imagePreviewContainer) {
+    postImageInput.addEventListener('change', function(e) {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagePreviewContainer.innerHTML = `<img src="${e.target.result}" alt="Image Preview" class="upload-preview">`;
+        };
+        reader.readAsDataURL(this.files[0]);
+      }
+    });
+  }
+  
+  // Set up QR code preview
+  const qrCodeInput = document.getElementById('gcash-qr');
+  const qrPreviewContainer = document.getElementById('qrPreviewContainer');
+  
+  if (qrCodeInput && qrPreviewContainer) {
+    qrCodeInput.addEventListener('change', function(e) {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          qrPreviewContainer.innerHTML = `<img src="${e.target.result}" alt="QR Code Preview" class="qr-preview-img">`;
+        };
+        reader.readAsDataURL(this.files[0]);
+      }
     });
   }
 }
 
 // Create post element function
 function createPostElement(post, currentUser) {
+  // Use the post template if available
+  const template = document.getElementById('post-template');
+  if (template) {
+    return createTemplatePostElement(post, currentUser);
+  }
+  
+  // Fallback to original implementation
   const postElement = document.createElement('div');
   postElement.className = 'post';
   postElement.id = `post-${post.id}`;
@@ -495,6 +602,85 @@ function createPostElement(post, currentUser) {
       }
     });
   }
+  
+  return postElement;
+}
+
+// Create a post element using the post template
+function createTemplatePostElement(post, currentUser) {
+  // Clone the template
+  const postElement = document.importNode(document.getElementById('post-template').content, true).querySelector('.post-card');
+  postElement.id = `post-${post.id}`;
+  
+  // Set post data
+  const postDate = new Date(post.date);
+  const formattedDate = postDate.toLocaleDateString();
+  
+  // Set post header info
+  postElement.querySelector('.post-author').textContent = post.author;
+  postElement.querySelector('.post-date').textContent = formattedDate;
+  postElement.querySelector('.post-title').textContent = post.title || post.content.substring(0, 30) + '...';
+  
+  // Set post content
+  postElement.querySelector('.post-content p').textContent = post.content;
+  
+  // Handle post image
+  const postImage = postElement.querySelector('.post-image');
+  if (post.imageUrl) {
+    postImage.src = post.imageUrl;
+    postElement.querySelector('.post-image-container').style.display = 'block';
+  } else {
+    postElement.querySelector('.post-image-container').style.display = 'none';
+  }
+  
+  // Handle donation statistics
+  const progress = postElement.querySelector('.progress');
+  const amountRaised = postElement.querySelector('.amount-raised');
+  const amountGoal = postElement.querySelector('.amount-goal');
+  
+  // Calculate progress percentage
+  const targetAmount = parseFloat(post.targetAmount) || 0;
+  const raisedAmount = parseFloat(post.amountRaised) || 0;
+  const progressPercentage = targetAmount > 0 ? Math.min((raisedAmount / targetAmount) * 100, 100) : 0;
+  
+  progress.style.width = `${progressPercentage}%`;
+  amountRaised.textContent = `₱${raisedAmount}`;
+  amountGoal.textContent = `of ₱${targetAmount} goal`;
+  
+  // Handle donate button
+  const donateBtn = postElement.querySelector('.donate-btn');
+  const donationModal = postElement.querySelector('.donation-modal');
+  const closeModal = postElement.querySelector('.close-modal');
+  const modalTitle = donationModal.querySelector('h3');
+  
+  donateBtn.addEventListener('click', function() {
+    modalTitle.textContent = `Donate to ${post.author}`;
+    
+    // Set QR code if available
+    const qrCode = donationModal.querySelector('.qr-code');
+    if (post.qrCodeUrl) {
+      qrCode.src = post.qrCodeUrl;
+      donationModal.style.display = 'flex';
+    } else {
+      alert('Sorry, this user has not set up their GCash QR code yet.');
+    }
+  });
+  
+  closeModal.addEventListener('click', function() {
+    donationModal.style.display = 'none';
+  });
+  
+  // Share button
+  const shareBtn = postElement.querySelector('.share-btn');
+  shareBtn.addEventListener('click', function() {
+    const postUrl = `${window.location.origin}${window.location.pathname}?post=${post.id}`;
+    
+    navigator.clipboard.writeText(postUrl).then(() => {
+      alert('Link to this story has been copied to your clipboard!');
+    }).catch(err => {
+      console.error('Could not copy text: ', err);
+    });
+  });
   
   return postElement;
 }
