@@ -28,34 +28,62 @@
                     
                     <form class="donate-form" id="donation-form">
                         <div class="form-group">
-                            <label for="donations">Type of Donation</label>
-                            <select id="donations" name="donations" class="donate-select">
+                            <label for="donation-type">Type of Donation</label>
+                            <select id="donation-type" name="donation-type" class="donate-select" required>
                                 <option value="" disabled selected>Select donation type</option>
                                 <option value="Cash">Cash</option>
                                 <option value="In-kind">In-kind donations</option>
-                                <option value="Both Cash and In-Kind">Both</option>
+                                <option value="Both">Both Cash and In-Kind</option>
                             </select>
                         </div>
             
-                        <div class="form-group">
+                        <div class="form-group" id="items-group" style="display: none;">
                             <label for="items">Items (for in-kind donations)</label>
                             <textarea id="items" class="donate-textarea" placeholder="Please describe the items you're donating"></textarea>
+                            <p class="help-text">Separate items with commas (e.g., Books, School Supplies, Clothes)</p>
                         </div>
             
                         <div class="form-group">
                             <label for="recipient">Recipient (optional)</label>
                             <input id="recipient" type="text" class="donate-input" placeholder="If donating to a specific person/organization">
+                            <div id="recipient-suggestions" class="suggestions-dropdown"></div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="cash">Donation Amount (PHP)</label>
+                        <div class="form-group" id="amount-group">
+                            <label for="amount">Donation Amount (PHP)</label>
                             <div class="amount-options">
                                 <button type="button" class="amount-btn" data-amount="100">₱100</button>
                                 <button type="button" class="amount-btn" data-amount="500">₱500</button>
                                 <button type="button" class="amount-btn" data-amount="1000">₱1,000</button>
                                 <button type="button" class="amount-btn" data-amount="5000">₱5,000</button>
                             </div>
-                            <input id="cash" type="number" min="50" class="donate-input" placeholder="Or enter custom amount">
+                            <input id="amount" type="number" min="50" class="donate-input" placeholder="Or enter custom amount" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="payment-method">Payment Method</label>
+                            <select id="payment-method" class="donate-select" required>
+                                <option value="" disabled selected>Select payment method</option>
+                                <option value="GCash">GCash</option>
+                                <option value="PayMaya">PayMaya</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="Credit Card">Credit/Debit Card</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="gcash-number-group" style="display: none;">
+                            <label for="gcash-number">GCash Number</label>
+                            <input id="gcash-number" type="tel" class="donate-input" placeholder="09XX XXX XXXX" pattern="[0-9]{11}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message">Message (optional)</label>
+                            <textarea id="message" class="donate-textarea" placeholder="Add a personal message to the recipient"></textarea>
+                        </div>
+                        
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="anonymous" name="anonymous">
+                            <label for="anonymous">Donate anonymously</label>
                         </div>
             
                         <button type="submit" class="donate-submit-btn">
@@ -64,8 +92,32 @@
                     </form>
                 </div>
             </section>
+
+            <!-- Donation Confirmation Modal -->
+            <div id="donation-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <div class="modal-icon success">
+                        <i class='bx bx-check-circle'></i>
+                    </div>
+                    <h3>Donation Successful!</h3>
+                    <p id="donation-confirmation-message">Your donation has been processed successfully.</p>
+                    <div class="donation-details" id="donation-details">
+                        <!-- Details will be inserted here by JavaScript -->
+                    </div>
+                    <div class="modal-actions">
+                        <button id="print-receipt" class="btn secondary-btn">
+                            <i class='bx bx-printer'></i> Print Receipt
+                        </button>
+                        <button id="share-donation" class="btn primary-btn">
+                            <i class='bx bx-share-alt'></i> Share
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <script src="../scripts/script.js"></script>
+        <script src="../scripts/donation.js"></script>
     </body>
 </html>
