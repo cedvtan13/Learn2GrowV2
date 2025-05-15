@@ -71,11 +71,61 @@
                             </select>
                         </div>
 
+                        <!-- GCash Number Field -->
                         <div class="form-group" id="gcash-number-group" style="display: none;">
                             <label for="gcash-number">GCash Number</label>
                             <input id="gcash-number" type="tel" class="donate-input" placeholder="09XX XXX XXXX" pattern="[0-9]{11}">
                         </div>
 
+                        <!-- PayMaya Number Field -->
+                        <div class="form-group" id="paymaya-number-group" style="display: none;">
+                            <label for="paymaya-number">PayMaya Number</label>
+                            <input id="paymaya-number" type="tel" class="donate-input" placeholder="09XX XXX XXXX" pattern="[0-9]{11}">
+                        </div>
+
+                        <!-- Credit Card Fields -->
+                        <div class="form-group" id="credit-card-group" style="display: none;">
+                            <label for="card-number">Card Number</label>
+                            <input id="card-number" type="text" class="donate-input" placeholder="1234 5678 9012 3456" pattern="[0-9]{13,16}">
+                            
+                            <div class="card-details">
+                                <div>
+                                    <label for="card-expiry">Expiry Date</label>
+                                    <input id="card-expiry" type="date" class="donate-input" placeholder="MM/YY" pattern="(0[1-9]|1[0-2])\/[0-9]{2}">
+                                </div>
+
+                                
+                                <div>
+                                    <label for="card-cvv">CVV</label>
+                                    <input id="card-cvv" type="text" class="donate-input" placeholder="123" pattern="[0-9]{3,4}">
+                                </div> 
+                            </div>
+                            
+                        </div>
+
+                        <!-- Bank Transfer Fields -->
+                        <div class="form-group" id="bank-transfer-group" style="display: none;">
+                            <label for="bank-name">Bank Name</label>
+                            <select id="bank-name" class="donate-select">
+                                <option value="" disabled selected>Select Bank</option>
+                                <option value="BDO">BDO (Banco de Oro)</option>
+                                <option value="BPI">BPI (Bank of the Philippine Islands)</option>
+                                <option value="Metrobank">Metrobank</option>
+                                <option value="Landbank">Landbank</option>
+                                <option value="PNB">PNB (Philippine National Bank)</option>
+                                <option value="Security Bank">Security Bank</option>
+                                <option value="UnionBank">UnionBank</option>
+                                <option value="Chinabank">Chinabank</option>
+                                <option value="RCBC">RCBC</option>
+                                <option value="EastWest">EastWest Bank</option>
+                            </select>
+                            
+                            <label for="account-number">Account Number</label>
+                            <input id="account-number" type="text" class="donate-input" placeholder="Enter account number">
+                            
+                            <label for="account-name">Account Name</label>
+                            <input id="account-name" type="text" class="donate-input" placeholder="Recipient's account name">
+                        </div>
                         <div class="form-group">
                             <label for="message">Message (optional)</label>
                             <textarea id="message" class="donate-textarea" placeholder="Add a personal message to the recipient"></textarea>

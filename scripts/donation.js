@@ -35,13 +35,46 @@ function initDonationForm() {
     
     // Toggle GCash number field
     paymentMethod.addEventListener('change', function() {
-        if (this.value === 'GCash') {
+    // Hide all payment method fields first
+    gcashNumberGroup.style.display = 'none';
+    document.getElementById('paymaya-number-group').style.display = 'none';
+    document.getElementById('credit-card-group').style.display = 'none';
+    document.getElementById('bank-transfer-group').style.display = 'none';
+    
+    // Remove required attributes from all fields
+    document.getElementById('gcash-number').removeAttribute('required');
+    document.getElementById('paymaya-number').removeAttribute('required');
+    document.getElementById('card-number').removeAttribute('required');
+    document.getElementById('card-expiry').removeAttribute('required');
+    document.getElementById('card-cvv').removeAttribute('required');
+    document.getElementById('bank-name').removeAttribute('required');
+    document.getElementById('account-number').removeAttribute('required');
+    document.getElementById('account-name').removeAttribute('required');
+    
+    // Show and set required for the selected payment method
+    switch(this.value) {
+        case 'GCash':
             gcashNumberGroup.style.display = 'block';
             document.getElementById('gcash-number').setAttribute('required', '');
-        } else {
-            gcashNumberGroup.style.display = 'none';
-            document.getElementById('gcash-number').removeAttribute('required');
-        }
+            break;
+        case 'PayMaya':
+            document.getElementById('paymaya-number-group').style.display = 'block';
+            document.getElementById('paymaya-number').setAttribute('required', '');
+            break;
+        
+        case 'Credit Card':
+            document.getElementById('credit-card-group').style.display = 'block';
+            document.getElementById('card-number').setAttribute('required', '');
+            //document.getElementById('card-expiry').setAttribute('required', '');
+            //document.getElementById('card-cvv').setAttribute('required', '');
+            break;
+        case 'Bank Transfer':
+            document.getElementById('bank-transfer-group').style.display = 'block';
+            document.getElementById('bank-name').setAttribute('required', '');
+            document.getElementById('account-number').setAttribute('required', '');
+            document.getElementById('account-name').setAttribute('required', '');
+            break;
+    }
     });
     
     // Quick amount selection
@@ -61,12 +94,12 @@ function initDonationForm() {
     });
 }
 
+// Update the validation function
 function validateDonationForm() {
     const form = document.getElementById('donation-form');
     const donationType = document.getElementById('donation-type').value;
     const amount = document.getElementById('amount').value;
     const paymentMethod = document.getElementById('payment-method').value;
-    const gcashNumber = document.getElementById('gcash-number').value;
     
     // Basic validation
     if (!donationType) {
@@ -89,14 +122,68 @@ function validateDonationForm() {
         return false;
     }
     
-    if (paymentMethod === 'GCash' && (!gcashNumber || !/^[0-9]{11}$/.test(gcashNumber))) {
-        alert('Please enter a valid GCash number (11 digits)');
-        return false;
+    // Payment method specific validation
+    switch(paymentMethod) {
+        case 'GCash':
+            const gcashNumber = document.getElementById('gcash-number').value;
+            if (!gcashNumber || !/^[0-9]{11}$/.test(gcashNumber)) {
+                alert('Please enter a valid GCash number (11 digits)');
+                return false;
+            }
+            break;
+        case 'PayMaya':
+            const paymayaNumber = document.getElementById('paymaya-number').value;
+            if (!paymayaNumber || !/^[0-9]{11}$/.test(paymayaNumber)) {
+                alert('Please enter a valid PayMaya number (11 digits)');
+                return false;
+            }
+            break;
+        case 'Credit Card':
+            const cardNumber = document.getElementById('card-number').value;
+            const cardExpiry = document.getElementById('card-expiry').value;
+            const cardCvv = document.getElementById('card-cvv').value;
+            
+            if (!cardNumber || !/^[0-9]{13,16}$/.test(cardNumber.replace(/\s/g, ''))) {
+                alert('Please enter a valid card number (13-16 digits)');
+                return false;
+            }
+            
+            if (!cardExpiry || !/(0[1-9]|1[0-2])\/[0-9]{2}/.test(cardExpiry)) {
+                alert('Please enter a valid expiry date (MM/YY)');
+                return false;
+            }
+            
+            if (!cardCvv || !/^[0-9]{3,4}$/.test(cardCvv)) {
+                alert('Please enter a valid CVV (3-4 digits)');
+                return false;
+            }
+            break;
+        case 'Bank Transfer':
+            const bankName = document.getElementById('bank-name').value;
+            const accountNumber = document.getElementById('account-number').value;
+            const accountName = document.getElementById('account-name').value;
+            
+            if (!bankName) {
+                alert('Please select a bank');
+                return false;
+            }
+            
+            if (!accountNumber || accountNumber.length < 10) {
+                alert('Please enter a valid account number (at least 10 digits)');
+                return false;
+            }
+            
+            if (!accountName || accountName.length < 3) {
+                alert('Please enter the recipient account name');
+                return false;
+            }
+            break;
     }
     
     return true;
 }
 
+// Update the processDonation function to include payment details
 function processDonation() {
     const form = document.getElementById('donation-form');
     const formData = new FormData(form);
@@ -106,6 +193,39 @@ function processDonation() {
     formData.forEach((value, key) => {
         donationData[key] = value;
     });
+    
+    // Add payment details based on selected method
+    const paymentMethod = donationData['payment-method'];
+    switch(paymentMethod) {
+        case 'GCash':
+            donationData.paymentDetails = {
+                type: 'GCash',
+                number: document.getElementById('gcash-number').value
+            };
+            break;
+        case 'PayMaya':
+            donationData.paymentDetails = {
+                type: 'PayMaya',
+                number: document.getElementById('paymaya-number').value
+            };
+            break;
+        case 'Credit Card':
+            donationData.paymentDetails = {
+                type: 'Credit Card',
+                cardNumber: document.getElementById('card-number').value,
+                expiry: document.getElementById('card-expiry').value,
+                cvv: document.getElementById('card-cvv').value
+            };
+            break;
+        case 'Bank Transfer':
+            donationData.paymentDetails = {
+                type: 'Bank Transfer',
+                bank: document.getElementById('bank-name').value,
+                accountNumber: document.getElementById('account-number').value,
+                accountName: document.getElementById('account-name').value
+            };
+            break;
+    }
     
     // Add additional metadata
     donationData.timestamp = new Date().toISOString();

@@ -1758,3 +1758,32 @@ body {
         flex-grow: 1;
     }
 }
+
+/* Payment method specific styles */
+.card-details {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.card-details > div {
+    flex: 1;
+}
+
+/* Hide all payment method fields by default */
+#gcash-number-group,
+#paymaya-number-group,
+#credit-card-group,
+#bank-transfer-group {
+    display: none;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #444;
+}
+
+/* Style for bank transfer fields */
+#bank-transfer-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
