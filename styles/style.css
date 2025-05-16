@@ -1610,11 +1610,11 @@ body {
   }
 }
 
-/* Donation Section Styles */
+/* Donation Page Specific Styles */
 .donate-section {
     max-width: 800px;
-    margin: 150px auto 40px;
-    background: rgba(30, 30, 30, 0.8);
+    margin: 100px auto;
+    background: rgba(30, 30, 30, 0.9);
     backdrop-filter: blur(8px);
     padding: 30px;
     border-radius: 10px;
@@ -1639,7 +1639,7 @@ body {
 .donate-form {
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 20px;
 }
 
 .form-group {
@@ -1728,6 +1728,21 @@ body {
     font-size: 22px;
 }
 
+.checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input {
+    width: auto;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    font-weight: normal;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .donate-section {
@@ -1742,4 +1757,33 @@ body {
     .amount-btn {
         flex-grow: 1;
     }
+}
+
+/* Payment method specific styles */
+.card-details {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.card-details > div {
+    flex: 1;
+}
+
+/* Hide all payment method fields by default */
+#gcash-number-group,
+#paymaya-number-group,
+#credit-card-group,
+#bank-transfer-group {
+    display: none;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #444;
+}
+
+/* Style for bank transfer fields */
+#bank-transfer-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
