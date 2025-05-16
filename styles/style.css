@@ -644,9 +644,51 @@ body {
   background-color: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(5px);
 }
+.modal-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    justify-content: center;
+}
+
+.modal-actions .btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-actions .secondary-btn {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.modal-actions .primary-btn {
+    background: #4a8fe7;
+    color: white;
+    border: 1px solid #3a7fd7;
+}
+
+.modal-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.modal-actions .secondary-btn:hover {
+    background: #e0e0e0;
+}
+
+.modal-actions .primary-btn:hover {
+    background: #3a7fd7;
+} 
 
 .modal-content {
-  background-color: rgba(40, 40, 40, 0.95);
+  background-color: rgba(40, 40, 40, 0.95); 
   margin: 10% auto;
   padding: 30px;
   border-radius: 10px;
@@ -1759,16 +1801,8 @@ body {
     }
 }
 
-/* Payment method specific styles */
-.card-details {
-    display: flex;
-    gap: 15px;
-    margin-top: 10px;
-}
 
-.card-details > div {
-    flex: 1;
-}
+
 
 /* Hide all payment method fields by default */
 #gcash-number-group,

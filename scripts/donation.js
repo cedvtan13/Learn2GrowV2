@@ -38,15 +38,11 @@ function initDonationForm() {
     // Hide all payment method fields first
     gcashNumberGroup.style.display = 'none';
     document.getElementById('paymaya-number-group').style.display = 'none';
-    document.getElementById('credit-card-group').style.display = 'none';
     document.getElementById('bank-transfer-group').style.display = 'none';
     
     // Remove required attributes from all fields
     document.getElementById('gcash-number').removeAttribute('required');
     document.getElementById('paymaya-number').removeAttribute('required');
-    document.getElementById('card-number').removeAttribute('required');
-    document.getElementById('card-expiry').removeAttribute('required');
-    document.getElementById('card-cvv').removeAttribute('required');
     document.getElementById('bank-name').removeAttribute('required');
     document.getElementById('account-number').removeAttribute('required');
     document.getElementById('account-name').removeAttribute('required');
@@ -61,13 +57,6 @@ function initDonationForm() {
             document.getElementById('paymaya-number-group').style.display = 'block';
             document.getElementById('paymaya-number').setAttribute('required', '');
             break;
-        
-        case 'Credit Card':
-            document.getElementById('credit-card-group').style.display = 'block';
-            document.getElementById('card-number').setAttribute('required', '');
-            //document.getElementById('card-expiry').setAttribute('required', '');
-            //document.getElementById('card-cvv').setAttribute('required', '');
-            break;
         case 'Bank Transfer':
             document.getElementById('bank-transfer-group').style.display = 'block';
             document.getElementById('bank-name').setAttribute('required', '');
@@ -75,7 +64,7 @@ function initDonationForm() {
             document.getElementById('account-name').setAttribute('required', '');
             break;
     }
-    });
+});
     
     // Quick amount selection
     document.querySelectorAll('.amount-btn').forEach(btn => {
@@ -138,26 +127,6 @@ function validateDonationForm() {
                 return false;
             }
             break;
-        case 'Credit Card':
-            const cardNumber = document.getElementById('card-number').value;
-            const cardExpiry = document.getElementById('card-expiry').value;
-            const cardCvv = document.getElementById('card-cvv').value;
-            
-            if (!cardNumber || !/^[0-9]{13,16}$/.test(cardNumber.replace(/\s/g, ''))) {
-                alert('Please enter a valid card number (13-16 digits)');
-                return false;
-            }
-            
-            if (!cardExpiry || !/(0[1-9]|1[0-2])\/[0-9]{2}/.test(cardExpiry)) {
-                alert('Please enter a valid expiry date (MM/YY)');
-                return false;
-            }
-            
-            if (!cardCvv || !/^[0-9]{3,4}$/.test(cardCvv)) {
-                alert('Please enter a valid CVV (3-4 digits)');
-                return false;
-            }
-            break;
         case 'Bank Transfer':
             const bankName = document.getElementById('bank-name').value;
             const accountNumber = document.getElementById('account-number').value;
@@ -182,7 +151,6 @@ function validateDonationForm() {
     
     return true;
 }
-
 // Update the processDonation function to include payment details
 function processDonation() {
     const form = document.getElementById('donation-form');
@@ -209,14 +177,6 @@ function processDonation() {
                 number: document.getElementById('paymaya-number').value
             };
             break;
-        case 'Credit Card':
-            donationData.paymentDetails = {
-                type: 'Credit Card',
-                cardNumber: document.getElementById('card-number').value,
-                expiry: document.getElementById('card-expiry').value,
-                cvv: document.getElementById('card-cvv').value
-            };
-            break;
         case 'Bank Transfer':
             donationData.paymentDetails = {
                 type: 'Bank Transfer',
@@ -233,6 +193,9 @@ function processDonation() {
     donationData.donorId = getCurrentUser()?.email || 'anonymous';
     donationData.transactionId = generateTransactionId();
     
+    
+    // Save the donation data for sharing/printing
+    localStorage.setItem('lastDonation', JSON.stringify(donationData));
     // Save donation to local storage
     saveDonation(donationData);
     
@@ -242,6 +205,7 @@ function processDonation() {
     // Reset form
     form.reset();
 }
+
 
 function saveDonation(donationData) {
     let donations = JSON.parse(localStorage.getItem('donations')) || [];
@@ -358,12 +322,80 @@ function showDonationConfirmation(donationData) {
     
     // Print receipt functionality
     document.getElementById('print-receipt').addEventListener('click', function() {
-        printReceipt(donationData);
-    });
+    const modalContent = document.querySelector('.modal-content').cloneNode(true);
+    
+    // Remove elements we don't want in the print
+    modalContent.querySelector('.close-modal').remove();
+    modalContent.querySelector('.modal-actions').remove();
+    
+    // Create a print-friendly version
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Donation Receipt</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .receipt-header { text-align: center; margin-bottom: 20px; }
+                    .receipt-title { font-size: 24px; margin-bottom: 5px; }
+                    .receipt-subtitle { font-size: 14px; color: #666; }
+                    .receipt-details { margin: 30px 0; }
+                    .detail-row { display: flex; margin-bottom: 10px; }
+                    .detail-label { font-weight: bold; width: 150px; }
+                    .thank-you { margin-top: 30px; font-style: italic; text-align: center; }
+                    hr { border: none; border-top: 1px dashed #ccc; margin: 20px 0; }
+                    .success-icon { text-align: center; color: #4CAF50; font-size: 50px; margin: 20px 0; }
+                </style>
+            </head>
+            <body>
+                <div class="receipt-header">
+                    <div class="success-icon">✓</div>
+                    <div class="receipt-title">Learn2Grow</div>
+                    <div class="receipt-subtitle">Donation Receipt</div>
+                </div>
+                <hr>
+                <div class="receipt-details">
+                    ${modalContent.innerHTML}
+                </div>
+                <hr>
+                <div class="thank-you">
+                    Thank you for your generous donation!<br>
+                    Your support makes a difference.
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() {
+                            window.close();
+                        }, 1000);
+                    };
+                </script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+});
+
     
     // Share donation functionality
-    document.getElementById('share-donation').addEventListener('click', function() {
-        shareDonation(donationData);
+   document.getElementById('share-donation').addEventListener('click', function() {
+    const donationData = JSON.parse(localStorage.getItem('lastDonation')) || {};
+    const shareText = `I just donated to ${donationData.recipient || 'a worthy cause'} through Learn2Grow! ` +
+                     `Join me in making a difference. #Learn2Grow #DonateForGood`;
+    
+    if (navigator.share) {
+        // Use Web Share API if available (mobile devices)
+        navigator.share({
+            title: 'My Donation on Learn2Grow',
+            text: shareText,
+            url: window.location.href
+        }).catch(err => {
+            console.log('Error sharing:', err);
+            fallbackShare(shareText);
+        });
+    } else {
+        fallbackShare(shareText);
+    }
     });
 }
 
@@ -426,12 +458,13 @@ function shareDonation(donationData) {
 }
 
 function fallbackShare(shareText) {
-    // Copy to clipboard as fallback
+    // Copy to clipboard
     navigator.clipboard.writeText(shareText).then(() => {
-        alert('Copied to clipboard! You can now paste and share it.');
+        alert('Copied to clipboard! You can now paste and share your donation.');
     }).catch(err => {
         console.error('Could not copy text: ', err);
-        prompt('Copy this text to share:', shareText);
+        // Fallback to prompt if clipboard fails
+        prompt('Copy this text to share your donation:', shareText);
     });
 }
 
