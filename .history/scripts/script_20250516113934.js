@@ -164,7 +164,7 @@ if (registerForm) {
       }
     }
   });
-  // Check if on posts page
+    // Check if on posts page
   if (window.location.pathname.includes('posts.html')) {
     const authRequired = document.getElementById('auth-required');
     const postsContent = document.getElementById('posts-content');
@@ -173,50 +173,22 @@ if (registerForm) {
     // Always show posts content for all users (authenticated or not)
     if (postsContent) postsContent.style.display = 'block';
     if (authRequired) authRequired.style.display = 'none';
-      console.log('Authentication status:', isAuthenticated);
     
-    // Check current user data
-    let currentUser = getCurrentUser();
-    console.log('Current user on posts page:', currentUser);
-    
-    // Create a debug user if we're on the posts page and need one
-    // This ensures we can always create posts for testing
-    if (!isAuthenticated && postCreationSection && window.authDebug) {
-      console.log('Creating debug user for posts page testing');
-      window.authDebug.ensureValidToken();
-      currentUser = getCurrentUser();
-      isAuthenticated = true; // Update authentication status
+    // Only allow authenticated users to create posts
+    if (!isAuthenticated && postCreationSection) {
+      postCreationSection.style.display = 'none';
       
-      console.log('Debug user created for posts page:', currentUser);
-      
-      // Add a debug notification
-      const debugNotice = document.createElement('div');
-      debugNotice.className = 'debug-notice';
-      debugNotice.style.background = 'rgba(255, 235, 59, 0.8)';
-      debugNotice.style.color = '#333';
-      debugNotice.style.padding = '10px';
-      debugNotice.style.marginBottom = '20px';
-      debugNotice.style.borderRadius = '5px';
-      debugNotice.style.textAlign = 'center';
-      debugNotice.innerHTML = `
-        <strong>Debug Mode:</strong> Using a test account. <br>
-        Press Ctrl+Shift+D to access debug controls.
+      // Add a message encouraging login to post
+      const loginPrompt = document.createElement('div');
+      loginPrompt.className = 'login-prompt';
+      loginPrompt.innerHTML = `
+        <div class="message">
+          <h3>Want to share your story?</h3>
+          <p>Log in to create posts and interact with the community.</p>
+          <a href="index.html" class="btn">Login / Register</a>
+        </div>
       `;
-      
-      if (postCreationSection) {
-        postCreationSection.parentNode.insertBefore(debugNotice, postCreationSection);
-      }
-    }
-    
-    // Always show post creation section in this environment
-    if (postCreationSection) {
-      postCreationSection.style.display = 'block';
-    }
-    
-    // Remove any existing login prompts
-    const existingPrompt = document.querySelector('.login-prompt');
-    if (existingPrompt) {
-      existingPrompt.remove();
+      postsContent.insertBefore(loginPrompt, postCreationSection.nextSibling);
     }
     
     // The posts.js file handles initializing the posts functionality
@@ -289,17 +261,7 @@ function getCurrentUser() {
 
 // Authentication Functions
 function checkAuthentication() {
-  const userData = localStorage.getItem('currentUser');
-  if (!userData) return false;
-  
-  try {
-    const user = JSON.parse(userData);
-    // Verify that the user object has required fields
-    return user && user.name && user.email && user.token;
-  } catch (e) {
-    console.error('Error parsing user data:', e);
-    return false;
-  }
+  return localStorage.getItem('currentUser') !== null;
 }
 
 // Reset password functionality
@@ -371,24 +333,16 @@ function registerUser(name, email, password) {
     return false;
   }
   
-  // Create new user object
-  const newUser = {
+  // Add new user
+  users.push({
     name: name,
     email: email,
     password: password,
-    role: 'Recipient', // Default role
     joined: new Date().toISOString(),
     profileImage: null
-  };
+  });
   
-  // Add new user to users array
-  users.push(newUser);
   localStorage.setItem('users', JSON.stringify(users));
-  
-  // Generate a token for the new user (will be used when auto-login after registration)
-  const token = generateMockToken(newUser);
-  newUser.token = token;
-  
   return true;
 }
 

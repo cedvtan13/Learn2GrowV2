@@ -12,16 +12,14 @@ import { protect }   from './middleware/authMiddleware.js';
 
 
 const app = express();
-// Increase payload size limits for JSON and URL-encoded data
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // serve your front-end
 app.use(express.static(path.join(process.cwd(), 'pages')));
 app.use('/styles',  express.static(path.join(process.cwd(), 'styles')));
 app.use('/scripts', express.static(path.join(process.cwd(), 'scripts')));
 app.use('/images',  express.static(path.join(process.cwd(), 'images')));
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'pages', 'index.html'));

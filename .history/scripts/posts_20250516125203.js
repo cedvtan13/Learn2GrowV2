@@ -213,23 +213,10 @@ function setupPostForm() {
           qrCodeUrl
         })
       });
-        if (!response.ok) {
-        let errorMessage = 'Failed to create post';
-        try {
-          // Try to parse the error response as JSON
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (parseError) {
-          // If the response isn't valid JSON, get the status text
-          console.error('Error parsing error response:', parseError);
-          errorMessage = `Server error: ${response.status} ${response.statusText}`;
-          
-          // If it's a payload size error (413), provide a specific message
-          if (response.status === 413) {
-            errorMessage = 'Your post or images are too large. Try using smaller images or less content.';
-          }
-        }
-        throw new Error(errorMessage);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create post');
       }
       
       const newPost = await response.json();      // After successfully posting to the database, update the UI

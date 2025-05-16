@@ -213,27 +213,18 @@ function setupPostForm() {
           qrCodeUrl
         })
       });
-        if (!response.ok) {
-        let errorMessage = 'Failed to create post';
-        try {
-          // Try to parse the error response as JSON
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (parseError) {
-          // If the response isn't valid JSON, get the status text
-          console.error('Error parsing error response:', parseError);
-          errorMessage = `Server error: ${response.status} ${response.statusText}`;
-          
-          // If it's a payload size error (413), provide a specific message
-          if (response.status === 413) {
-            errorMessage = 'Your post or images are too large. Try using smaller images or less content.';
-          }
-        }
-        throw new Error(errorMessage);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create post');
       }
       
-      const newPost = await response.json();      // After successfully posting to the database, update the UI
+      const newPost = await response.json();
+        // After successfully posting to the database, update the UI
       displayNewPost(newPost, currentUser);
+      
+      // Make sure interaction handlers are set up for the new post
+      setupPostInteractions(currentUser);
       
       // Reset form fields
       storyForm.reset();
@@ -322,15 +313,11 @@ function displayNewPost(post, currentUser) {
     }
     
     if (amountRaised) amountRaised.textContent = `₱${post.amountRaised.toLocaleString()}`;
-    if (amountGoal) amountGoal.textContent = `of ₱${post.targetAmount.toLocaleString()}`;    // QR code for donations
+    if (amountGoal) amountGoal.textContent = `of ₱${post.targetAmount.toLocaleString()}`;
+      // QR code for donations
     const qrCode = postElement.querySelector('.qr-code');
     if (qrCode && post.qrCodeUrl) {
       qrCode.src = post.qrCodeUrl;
-    }
-    
-    // Store QR code URL as data attribute for donate button to use
-    if (post.qrCodeUrl) {
-      postElement.setAttribute('data-qrcode', post.qrCodeUrl);
     }
     
     // Add post ID as data attribute for reference
@@ -422,7 +409,8 @@ function getCurrentUser() {
 function setupPostInteractions(currentUser) {
   const donateButtons = document.querySelectorAll('.donate-btn');
   const shareButtons = document.querySelectorAll('.share-btn');
-    // Handle donate buttons
+  
+  // Handle donate buttons
   donateButtons.forEach(button => {
     button.addEventListener('click', function(e) {
       const postCard = this.closest('.post-card');
@@ -438,23 +426,6 @@ function setupPostInteractions(currentUser) {
       // Show donation modal for authenticated users
       const modal = postCard.querySelector('.donation-modal');
       if (modal) {
-        // Set the modal title
-        const modalTitle = modal.querySelector('h3');
-        if (modalTitle) {
-          const authorName = postCard.querySelector('.post-author').textContent || 'this story';
-          modalTitle.textContent = `Donate to ${authorName}`;
-        }
-        
-        // Ensure QR code is displayed if available
-        const qrImg = modal.querySelector('.qr-code');
-        if (qrImg && qrImg.getAttribute('src') === '') {
-          // Find the QR code URL from post data
-          const qrCodeUrl = postCard.getAttribute('data-qrcode');
-          if (qrCodeUrl) {
-            qrImg.src = qrCodeUrl;
-          }
-        }
-        
         modal.style.display = 'flex';
       }
     });

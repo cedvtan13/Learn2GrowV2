@@ -1,67 +1,3 @@
-// Debug helper to show the current authentication status
-function debugAuthStatus() {
-  const currentUser = getCurrentUser();
-  const isAuthenticated = currentUser && currentUser.token;
-  
-  console.log('======= Auth Debug Info =======');
-  console.log('Is authenticated:', isAuthenticated);
-  if (currentUser) {
-    console.log('User:', currentUser.name);
-    console.log('Email:', currentUser.email);
-    console.log('Token exists:', !!currentUser.token);
-    if (currentUser.token) {
-      console.log('Token preview:', currentUser.token.substring(0, 20) + '...');
-    } else {
-      console.log('No token available');
-    }
-  } else {
-    console.log('No current user data');
-  }
-  console.log('=============================');
-  
-  // Update visual indicators on the page
-  const formStatus = document.getElementById('form-status');
-  const authIndicator = document.getElementById('auth-indicator');
-  const authStatusText = document.getElementById('auth-status-text');
-  
-  // Update form status
-  if (formStatus) {
-    if (isAuthenticated) {
-      formStatus.textContent = `Ready to post as ${currentUser.name}`;
-      formStatus.style.color = 'green';
-    } else {
-      formStatus.textContent = 'Not logged in or token missing';
-      formStatus.style.color = 'red';
-    }
-  }
-  
-  // Update authentication indicator
-  if (authIndicator) {
-    authIndicator.className = 'auth-status-indicator ' + 
-      (isAuthenticated ? 'authenticated' : 'not-authenticated');
-  }
-  
-  // Update authentication status text
-  if (authStatusText) {
-    if (isAuthenticated) {
-      authStatusText.textContent = `Logged in as ${currentUser.name}`;
-      authStatusText.style.color = 'green';
-    } else {
-      authStatusText.textContent = 'Not authenticated';
-      authStatusText.style.color = 'red';
-    }
-  }
-  
-  // If we have window.authDebug available but no authentication,
-  // automatically try to create a debug user
-  if (!isAuthenticated && window.authDebug && typeof window.authDebug.ensureValidToken === 'function') {
-    console.log('Automatically creating debug user');
-    window.authDebug.ensureValidToken();
-    // Re-run auth check after a short delay
-    setTimeout(debugAuthStatus, 500);
-  }
-}
-
 // Additional functionality for posts
 
 // Handle image uploads - uses either direct API upload or base64 encoding
@@ -164,28 +100,15 @@ function setupPostForm() {
     e.preventDefault();
     const formStatus = document.getElementById('form-status');
     formStatus.textContent = 'Submitting your post...';
-      try {      // Get current user data or create debug user if needed
-      let currentUser = getCurrentUser();
+      try {
+      const currentUser = getCurrentUser();
       console.log('Current user data:', currentUser);
       
-      // If no valid user or token, try to use the debug tools
       if (!currentUser || !currentUser.token) {
-        console.log('Missing user or token, attempting to create debug user');
-        
-        // Try to use auth debug if available
-        if (window.authDebug && typeof window.authDebug.ensureValidToken === 'function') {
-          window.authDebug.ensureValidToken();
-          currentUser = getCurrentUser(); // Refresh after creating debug user
-          console.log('Debug user created:', currentUser);
-        }
-        
-        // If still no valid user/token, show error
-        if (!currentUser || !currentUser.token) {
-          console.error('Unable to create valid user session');
-          formStatus.textContent = 'You must be logged in to post.';
-          formStatus.style.color = 'red';
-          return;
-        }
+        console.error('Missing user or token:', currentUser);
+        formStatus.textContent = 'You must be logged in to post.';
+        formStatus.style.color = 'red';
+        return;
       }
       
       console.log('Token available:', currentUser.token.substring(0, 20) + '...');
@@ -213,26 +136,15 @@ function setupPostForm() {
           qrCodeUrl
         })
       });
-        if (!response.ok) {
-        let errorMessage = 'Failed to create post';
-        try {
-          // Try to parse the error response as JSON
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (parseError) {
-          // If the response isn't valid JSON, get the status text
-          console.error('Error parsing error response:', parseError);
-          errorMessage = `Server error: ${response.status} ${response.statusText}`;
-          
-          // If it's a payload size error (413), provide a specific message
-          if (response.status === 413) {
-            errorMessage = 'Your post or images are too large. Try using smaller images or less content.';
-          }
-        }
-        throw new Error(errorMessage);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create post');
       }
       
-      const newPost = await response.json();      // After successfully posting to the database, update the UI
+      const newPost = await response.json();
+      
+      // After successfully posting to the database, update the UI
       displayNewPost(newPost, currentUser);
       
       // Reset form fields
@@ -276,28 +188,13 @@ function displayNewPost(post, currentUser) {
   // Create the post element using either a template or direct DOM creation
   let postElement;
   const postTemplate = document.getElementById('post-template');
-    if (postTemplate) {
+  
+  if (postTemplate) {
     // Use the template if available
     postElement = document.importNode(postTemplate.content, true).querySelector('.post-card');
     
     // Fill in the post data
-    // Handle author name - it might be nested as author.name or it might be a plain ID
-    if (post.author) {
-      if (post.author.name) {
-        // If author object is populated
-        postElement.querySelector('.post-author').textContent = post.author.name;
-      } else if (currentUser && currentUser.name) {
-        // Fallback to current user name
-        postElement.querySelector('.post-author').textContent = currentUser.name;
-      } else {
-        // Fallback to Debug User
-        postElement.querySelector('.post-author').textContent = "Debug User";
-      }
-    } else {
-      // If author is completely missing
-      postElement.querySelector('.post-author').textContent = "Unknown User";
-    }
-    
+    postElement.querySelector('.post-author').textContent = post.author.name;
     postElement.querySelector('.post-date').textContent = formatDate(post.createdAt);
     postElement.querySelector('.post-title').textContent = post.title;
     postElement.querySelector('.post-content p').textContent = post.content;
@@ -322,15 +219,12 @@ function displayNewPost(post, currentUser) {
     }
     
     if (amountRaised) amountRaised.textContent = `₱${post.amountRaised.toLocaleString()}`;
-    if (amountGoal) amountGoal.textContent = `of ₱${post.targetAmount.toLocaleString()}`;    // QR code for donations
+    if (amountGoal) amountGoal.textContent = `of ₱${post.targetAmount.toLocaleString()}`;
+    
+    // QR code for donations
     const qrCode = postElement.querySelector('.qr-code');
     if (qrCode && post.qrCodeUrl) {
       qrCode.src = post.qrCodeUrl;
-    }
-    
-    // Store QR code URL as data attribute for donate button to use
-    if (post.qrCodeUrl) {
-      postElement.setAttribute('data-qrcode', post.qrCodeUrl);
     }
     
     // Add post ID as data attribute for reference
@@ -356,7 +250,6 @@ function displayNewPost(post, currentUser) {
 
 // Initialize posts functionality
 function initializePostsFunctionality() {
-  debugAuthStatus();
   setupImagePreviews();
   setupPostForm();
   loadPosts();
@@ -422,7 +315,8 @@ function getCurrentUser() {
 function setupPostInteractions(currentUser) {
   const donateButtons = document.querySelectorAll('.donate-btn');
   const shareButtons = document.querySelectorAll('.share-btn');
-    // Handle donate buttons
+  
+  // Handle donate buttons
   donateButtons.forEach(button => {
     button.addEventListener('click', function(e) {
       const postCard = this.closest('.post-card');
@@ -438,23 +332,6 @@ function setupPostInteractions(currentUser) {
       // Show donation modal for authenticated users
       const modal = postCard.querySelector('.donation-modal');
       if (modal) {
-        // Set the modal title
-        const modalTitle = modal.querySelector('h3');
-        if (modalTitle) {
-          const authorName = postCard.querySelector('.post-author').textContent || 'this story';
-          modalTitle.textContent = `Donate to ${authorName}`;
-        }
-        
-        // Ensure QR code is displayed if available
-        const qrImg = modal.querySelector('.qr-code');
-        if (qrImg && qrImg.getAttribute('src') === '') {
-          // Find the QR code URL from post data
-          const qrCodeUrl = postCard.getAttribute('data-qrcode');
-          if (qrCodeUrl) {
-            qrImg.src = qrCodeUrl;
-          }
-        }
-        
         modal.style.display = 'flex';
       }
     });

@@ -12,16 +12,14 @@ import { protect }   from './middleware/authMiddleware.js';
 
 
 const app = express();
-// Increase payload size limits for JSON and URL-encoded data
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // serve your front-end
 app.use(express.static(path.join(process.cwd(), 'pages')));
 app.use('/styles',  express.static(path.join(process.cwd(), 'styles')));
 app.use('/scripts', express.static(path.join(process.cwd(), 'scripts')));
 app.use('/images',  express.static(path.join(process.cwd(), 'images')));
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'pages', 'index.html'));
@@ -29,14 +27,7 @@ app.get('/', (req, res) => {
 
 // mount your API
 app.use('/api/users', userRoutes);
-
-// Use middleware only on POST/PUT/DELETE routes, allowing public GET access
-app.use('/api/posts', (req, res, next) => {
-  if (req.method === 'GET') {
-    return postRoutes(req, res, next);
-  }
-  return protect(req, res, next);
-}, postRoutes);
+app.use('/api/posts', protect, postRoutes); // Protected route, requires authentication
 
 
 const PORT = process.env.PORT || 3000;
