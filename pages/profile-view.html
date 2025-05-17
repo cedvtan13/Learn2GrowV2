@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile | Learn2Grow</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        .profile-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .profile-header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #4a8fe7;
+        }
+        
+        .profile-info h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            color: #fff;
+        }
+        
+        .user-role {
+            display: inline-block;
+            background: rgba(74, 143, 231, 0.2);
+            color: #4a8fe7;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .join-date {
+            color: #aaa;
+            font-size: 14px;
+        }
+        
+        .actions-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .profile-tabs {
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .profile-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #ddd;
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .profile-tab.active {
+            background: #4a8fe7;
+            color: white;
+        }
+        
+        .profile-tab:hover:not(.active) {
+            background: rgba(74, 143, 231, 0.1);
+        }
+        
+        .profile-section {
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            color: #4a8fe7;
+            margin-top: 0;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="background">
+        <header class="header">
+            <nav class="navbar">
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="posts.html">Posts</a>
+                <a href="help.html">Help</a>
+                <a href="messages.html">Messages</a>
+                <a href="profile.html">Profile</a>
+            </nav>
+        </header>
+
+        <main class="container" style="padding-top: 100px;">
+            <div class="profile-header">
+                <div class="profile-header-left">
+                    <img id="user-profile-pic" src="../images/default-profile.jpg" alt="Profile Picture" class="profile-pic">
+                    <div class="profile-info">
+                        <h1 id="user-name">User Name</h1>
+                        <div>
+                            <span id="user-role" class="user-role">Recipient</span>
+                            <span id="join-date" class="join-date">Joined May 2025</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="actions-container">
+                    <!-- Message Button - This is the button we're adding -->
+                    <button class="message-btn" id="message-user-btn" onclick="startConversation('userId')">
+                        <i class='bx bx-message-square'></i> Message
+                    </button>
+                </div>
+            </div>
+            
+            <div class="profile-tabs">
+                <button class="profile-tab active" data-tab="posts">Posts</button>
+                <button class="profile-tab" data-tab="about">About</button>
+            </div>
+            
+            <div id="tab-posts" class="profile-tab-content">
+                <div class="profile-section">
+                    <h3 class="section-title">Recent Posts</h3>
+                    <div id="user-posts-container" class="posts-container">
+                        <!-- Posts will be dynamically loaded here -->
+                        <p class="empty-state">This user has not created any posts yet.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="tab-about" class="profile-tab-content" style="display: none;">
+                <div class="profile-section">
+                    <h3 class="section-title">About</h3>
+                    <p id="user-bio">This user has not added a bio yet.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../scripts/script.js"></script>
+    <script src="../scripts/profile-messaging.js"></script>
+    <script>
+        // Simple tab functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.profile-tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Hide all tab contents
+                    document.querySelectorAll('.profile-tab-content').forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Show selected tab content and mark tab as active
+                    const tabName = tab.dataset.tab;
+                    document.getElementById(`tab-${tabName}`).style.display = 'block';
+                    tab.classList.add('active');
+                });
+            });
+            
+            // Load user data (this would fetch from API in production)
+            loadUserProfile();
+        });
+        
+        // Sample function to load user profile data
+        function loadUserProfile() {
+            // In a real app, you would fetch this data from an API using the user ID in the URL
+            // For now, we'll use mock data
+            const userData = {
+                _id: 'sampleUserId123',
+                name: 'John Smith',
+                role: 'Recipient',
+                joinDate: '2025-01-15T00:00:00.000Z',
+                profilePic: '../images/default-profile.jpg',
+                bio: 'I am a student looking to improve my education through Learn2Grow.'
+            };
+            
+            // Populate the UI with user data
+            document.getElementById('user-name').textContent = userData.name;
+            document.getElementById('user-role').textContent = userData.role;
+            document.getElementById('user-profile-pic').src = userData.profilePic;
+            document.getElementById('user-bio').textContent = userData.bio;
+            document.getElementById('join-date').textContent = `Joined ${new Date(userData.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+            
+            // Set the message button's userId parameter
+            const messageBtn = document.getElementById('message-user-btn');
+            if (messageBtn) {
+                messageBtn.setAttribute('onclick', `startConversation('${userData._id}')`);
+            }
+        }
+    </script>
+</body>
+</html>

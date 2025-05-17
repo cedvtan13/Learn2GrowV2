@@ -332,9 +332,23 @@ function displayNewPost(post, currentUser) {
     if (post.qrCodeUrl) {
       postElement.setAttribute('data-qrcode', post.qrCodeUrl);
     }
-    
-    // Add post ID as data attribute for reference
+      // Add post ID as data attribute for reference
     postElement.dataset.postId = post._id;
+    
+    // Set up the message button to link to the author
+    const messageBtn = postElement.querySelector('.message-btn');
+    if (messageBtn && post.author && post.author._id) {
+      messageBtn.setAttribute('onclick', `startConversation('${post.author._id}')`);
+      messageBtn.dataset.userId = post.author._id;
+      
+      // Hide message button if the post is from the current user
+      if (currentUser && currentUser._id === post.author._id) {
+        messageBtn.style.display = 'none';
+      }
+    } else if (messageBtn) {
+      // If no author ID, hide the message button
+      messageBtn.style.display = 'none';
+    }
   } else {
     // Fallback to direct DOM creation if template is not available
     postElement = document.createElement('div');

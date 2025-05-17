@@ -1,40 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help</title>
+    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEARN 2 GROW | Help & Support</title>
     <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/help.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 </head>
 <body>
-    <header class="header">
-        <nav class="navbar">
-            <a href="index.html">Home</a>
-            <a href="about.html">About</a>
-            <a href="posts.html">Posts</a>
-            <a href="help.html" class="active">Help</a>
-        </nav>
-    </header>
+    <div class="background">
+        <header class="header">
+            <nav class="navbar">
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="posts.html">Posts</a>
+                <a href="help.html" class="active">Help</a>
+                <a href="messages.html">Messages</a>
+            </nav>
+        </header>
 
-    <div class="help-container">
-        <h1>Help & Support</h1>
-        <section class="faq">
-            <h2>Frequently Asked Questions</h2>
-            <div class="faq-item">
-                <h3>How do I create a post?</h3>
-                <p>To create a post, navigate to the Posts page and fill out the form to share your story.</p>
+        <div class="help-container">
+            <div class="help-header">
+                <h1><i class='bx bx-support'></i> Help & Support</h1>
+                <p class="help-subtitle">We're here to assist you with any questions or concerns</p>
             </div>
-            <div class="faq-item">
-                <h3>How do I edit my profile?</h3>
-                <p>Go to the Profile page to view and edit your profile information.</p>
+            
+            <div class="help-content">
+                <section class="faq-section">
+                    <h2><i class='bx bx-question-mark'></i> Frequently Asked Questions</h2>
+                    
+                    <div class="faq-list">
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <h3>How do I create a post?</h3>
+                                <i class='bx bx-chevron-down'></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>To create a post, navigate to the Posts page and click on the "Create New Post" button. Fill out the form with your story details, add any images if needed, and click "Submit" to share your story with the community.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <h3>How do I edit my profile?</h3>
+                                <i class='bx bx-chevron-down'></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>Go to the Profile page by clicking on your profile picture in the top right corner, then select "Edit Profile". From there, you can update your personal information, change your profile picture, and modify your account settings.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <h3>How can I donate to someone's cause?</h3>
+                                <i class='bx bx-chevron-down'></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>Visit the Posts page and browse through the stories. When you find a cause you'd like to support, click on the "Donate" button on their post. You'll be guided through our secure donation process to help their cause.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <h3>Is my personal information secure?</h3>
+                                <i class='bx bx-chevron-down'></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>Yes, we take data security very seriously. Your personal information is encrypted and stored securely. We never share your private details with third parties without your explicit consent. You can review our privacy policy for more information.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <h3>How do I reset my password?</h3>
+                                <i class='bx bx-chevron-down'></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>To reset your password, click on the "Forgot Password" link on the login page. Enter your email address, and we'll send you a password reset link. Follow the instructions in the email to create a new password.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="contact-section">
+                    <h2><i class='bx bx-envelope'></i> Contact Us</h2>
+                    
+                    <div class="contact-methods">
+                        <div class="contact-card">
+                            <i class='bx bx-envelope-open'></i>
+                            <h3>Email Support</h3>
+                            <p>Have a specific question? Send us an email and we'll respond within 24 hours.</p>
+                            <a href="mailto:support@learn2grow.com" class="contact-btn">support@learn2grow.com</a>
+                        </div>
+                        
+                        <div class="contact-card">
+                            <i class='bx bx-message-detail'></i>
+                            <h3>Send a Message</h3>
+                            <form id="contact-form" class="contact-form">
+                                <div class="form-group">
+                                    <input type="text" id="name" placeholder="Your Name" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="email" id="email" placeholder="Your Email" required>
+                                </div>
+                                <div class="form-group">
+                                    <textarea id="message" placeholder="Your Message" rows="4" required></textarea>
+                                </div>
+                                <button type="submit" class="submit-btn">Send Message</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
             </div>
-        </section>
-        <section class="contact">
-            <h2>Contact Us</h2>
-            <p>If you have further questions, please email us at <a href="mailto:support@learn2grow.com">support@learn2grow.com</a>.</p>
-        </section>
+        </div>
     </div>
 
     <script src="../scripts/script.js"></script>
+    <script src="../scripts/help.js"></script>
 </body>
 </html>

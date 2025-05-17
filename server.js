@@ -6,6 +6,7 @@ import path    from 'path';
 import { connectDB } from './db.js';
 import userRoutes    from './routes/userRoutes.js';
 import postRoutes    from './routes/postRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 import { protect }   from './middleware/authMiddleware.js';
 
 
@@ -29,6 +30,9 @@ app.get('/', (req, res) => {
 
 // mount your API
 app.use('/api/users', userRoutes);
+
+// Messages API - requires authentication for all routes
+app.use('/api/messages', protect, messageRoutes);
 
 // Use middleware only on POST/PUT/DELETE routes, allowing public GET access
 app.use('/api/posts', (req, res, next) => {
