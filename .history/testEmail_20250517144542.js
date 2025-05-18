@@ -1,0 +1,46 @@
+// testEmail.js
+import dotenv from 'dotenv';
+dotenv.config();
+import emailService from './utils/emailService.js';
+
+async function testEmails() {
+  console.log('📧 Starting Email Test...');
+  console.log('Environment Variables:');
+  console.log(`EMAIL_HOST: ${process.env.EMAIL_HOST || '(not set)'}`);
+  console.log(`EMAIL_PORT: ${process.env.EMAIL_PORT || '(not set)'}`);
+  console.log(`EMAIL_USER: ${process.env.EMAIL_USER || '(not set)'}`);
+  console.log(`EMAIL_PASS: ${process.env.EMAIL_PASS ? '(set)' : '(not set)'}`);
+  console.log(`ADMIN_EMAIL: ${process.env.ADMIN_EMAIL || '(not set)'}`);
+  console.log(`NODE_ENV: ${process.env.NODE_ENV || '(not set)'}`);
+  
+  const testName = 'Test User';
+  const testEmail = process.env.TEST_EMAIL || process.env.EMAIL_USER;
+  
+  if (!testEmail) {
+    console.error('❌ No test email address available. Set TEST_EMAIL or EMAIL_USER in .env');
+    process.exit(1);
+  }
+  
+  try {
+    console.log(`\n🔹 Testing recipient request emails to ${testEmail}...`);
+    const requestResult = await Promise.all([
+      emailService.sendRecipientRequestToAdmin(testName, testEmail),
+      emailService.sendRecipientConfirmation(testName, testEmail)
+    ]);
+    console.log(`✅ Request emails sent: ${requestResult}`);
+    
+    console.log(`\n🔹 Testing approval email to ${testEmail}...`);
+    const approvalResult = await emailService.sendRecipientApproval(testName, testEmail);
+    console.log(`✅ Approval email sent: ${approvalResult}`);
+    
+    console.log(`\n🔹 Testing rejection email to ${testEmail}...`);
+    const rejectionResult = await emailService.sendRecipientRejection(testName, testEmail, 'Test rejection reason');
+    console.log(`✅ Rejection email sent: ${rejectionResult}`);
+    
+    console.log('\n📧 All email tests completed!');
+  } catch (error) {
+    console.error('❌ Error sending test emails:', error);
+  }
+}
+
+testEmails().catch(console.error);

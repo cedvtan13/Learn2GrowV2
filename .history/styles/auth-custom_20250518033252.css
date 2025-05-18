@@ -1,0 +1,113 @@
+/* User type selector styles */
+.user-type-selector {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.user-type-selector p {
+    font-size: 16px;
+    color: #e4e4e4;
+    margin-bottom: 10px;
+}
+
+.radio-options {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 8px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    padding: 8px 15px;
+    transition: all 0.2s ease;
+    border-radius: 20px;
+}
+
+.radio-label:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.radio-label input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.radio-custom {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #4a8fe7;
+    border-radius: 50%;
+    margin-right: 8px;
+    display: inline-block;
+    position: relative;
+}
+
+.radio-custom::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #4a8fe7;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: all 0.2s ease;
+}
+
+.radio-label input[type="radio"]:checked + .radio-custom::after {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.radio-label span:not(.radio-custom) {
+    color: #e4e4e4;
+    font-size: 16px;
+}
+
+/* Registration notification popup */
+.notification-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(30, 30, 30, 0.95);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    display: none;  /* Hidden by default */
+}
+
+.notification-popup.show {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.notification-popup h3 {
+    color: #4a8fe7;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.notification-popup p {
+    color: #e4e4e4;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.notification-popup .btn {
+    margin-top: 10px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -48%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}

@@ -1,0 +1,37 @@
+{
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.14.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^7.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "name": "learn2growv2",
+  "version": "1.0.0",
+  "main": "db.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cedvtan13/Learn2GrowV2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cedvtan13/Learn2GrowV2/issues"
+  },
+  "homepage": "https://github.com/cedvtan13/Learn2GrowV2#readme",
+  "description": "",  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "email:test": "node testEmail.js",
+    "email:send": "node sendAutomatedEmails.js",
+    "email:scheduled": "node scheduledEmails.js"
+  }
+}
