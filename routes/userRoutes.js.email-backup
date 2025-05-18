@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
       password: hashed,
       role: role || 'Recipient'
     });
-    console.log("Created user document:", user);
+    console.log('✅ Created user document:', user);
 
     const { _id, role: userRole } = user;
     return res.status(201).json({ 
@@ -50,7 +50,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// GET /api/users  return all users (omit passwords)
+// GET /api/users — return all users (omit passwords)
 router.get('/', async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -104,49 +104,56 @@ router.post('/request-recipient', async (req, res) => {
       return res.status(400).json({ message: 'Name, email and password are required.' });
     }
 
+    const exists = await User.findOne({ email });
+    if (exists) {
+      return res.status(400).json({ message: 'Email already in use.' });
+    }
+
     // Log the request
-    console.log("New Recipient registration request received");
+    console.log(`🔔 New Recipient registration request received: ${name} (${email})`);
     
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    
-    try {
-      // Import the models and services
-      const RecipientRequest = (await import('../models/recipientRequestModel.js')).default;
-      const resendEmailService = (await import('../utils/resendEmailService.js')).default;
+      try {
+      // Import the Resend Email Service
+      const resendEmailServiceModule = await import('../utils/resendEmailService.js');
+      const resendEmailService = resendEmailServiceModule.default;
       
-      // Check if user exists
-      const exists = await User.findOne({ email });
-      if (exists) {
-        // Send email notification for existing user
-        await resendEmailService.sendExistingUserEmail(name, email);
-        return res.status(400).json({ message: 'Email already in use. We sent an email with further instructions.' });
+      // Process the recipient registration - handles checking for existing users, 
+      // creating the request and sending appropriate emails
+      const result = await resendEmailService.processRecipientRegistration(name, email, hashedPassword);
+      
+      if (result.success) {
+        console.log(`✅ Recipient registration processed: ${result.message}`);
+        
+        // For backward compatibility, ensure admin is notified if this is a new user
+        if (result.isNewUser) {
+          const emailServiceModule = await import('../utils/emailService.js');
+          const emailService = emailServiceModule.default;
+          await emailService.sendRecipientRequestToAdmin(name, email);
+        }
+      } else {
+        console.error('Error processing recipient registration:', result.error);
       }
-      
-      // Store the request
-      const request = await RecipientRequest.create({
-        name,
-        email,
-        password: hashedPassword,
-        status: 'pending'
-      });
-      
-      console.log("Recipient request stored with ID:", request._id);
-      
-      // Send verification email to user
-      await resendEmailService.sendNewRecipientVerificationEmail(name, email);
-      
-      // Send notification email to admin
-      await resendEmailService.sendRecipientRequestToAdmin(name, email);
-      
     } catch (storageError) {
-      console.error('Error storing recipient request or sending email:', storageError);
+      console.error('Error storing recipient request:', storageError);
       // Even if storage fails, return success to user but log the error
+    }    
+    // Prepare response message based on the result
+    let responseMessage = 'Registration request received. Our team will review your application and contact you shortly.';
+    
+    // If we had a successful result, customize the message
+    if (result?.success) {
+      if (!result.isNewUser && !result.isPending) {
+        responseMessage = 'This email is already registered. Please check your email for login instructions.';
+      } else if (!result.isNewUser && result.isPending) {
+        responseMessage = 'Your application is already under review. Please check your email for more information.';
+      }
     }
     
     return res.status(200).json({ 
-      message: 'Registration request received. Please check your email for verification details.' 
+      message: responseMessage
     });
   } catch (err) {
     console.error('Error processing recipient request:', err);
@@ -181,9 +188,8 @@ router.put('/recipient-requests/:id', protect, admin, async (req, res) => {
       return res.status(400).json({ message: 'Status must be either approved or rejected' });
     }
     
-    // Import the RecipientRequest model and email service
+    // Import the RecipientRequest model
     const RecipientRequest = (await import('../models/recipientRequestModel.js')).default;
-    const resendEmailService = (await import('../utils/resendEmailService.js')).default;
     
     // Find the request
     const request = await RecipientRequest.findById(req.params.id);
@@ -200,13 +206,24 @@ router.put('/recipient-requests/:id', protect, admin, async (req, res) => {
         password: request.password, // Already hashed
         role: 'Recipient'
       });
-      console.log("New Recipient user created");
-      
-      // Send approval email
-      await resendEmailService.sendRecipientApproval(request.name, request.email);
-    } else {
+        console.log(`✅ New Recipient user created: ${user._id}`);
+        // Send approval email
+      try {
+        const resendEmailServiceModule = await import('../utils/resendEmailService.js');
+        const resendEmailService = resendEmailServiceModule.default;
+        await resendEmailService.sendRecipientApproval(request.name, request.email);
+      } catch (emailError) {
+        console.error('Error sending approval email:', emailError);
+      }
+    } else if (status === 'rejected') {
       // Send rejection email
-      await resendEmailService.sendRecipientRejection(request.name, request.email, notes);
+      try {
+        const resendEmailServiceModule = await import('../utils/resendEmailService.js');
+        const resendEmailService = resendEmailServiceModule.default;
+        await resendEmailService.sendRecipientRejection(request.name, request.email, notes);
+      } catch (emailError) {
+        console.error('Error sending rejection email:', emailError);
+      }
     }
     
     // Update request status

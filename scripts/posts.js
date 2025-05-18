@@ -259,13 +259,12 @@ function setupPostForm() {
       formStatus.style.color = 'green';
       
       // Re-enable form elements
-      enableFormElements();
-        // Clear the status message after 3 seconds
+      enableFormElements();      // Clear the status message and reload the page after brief delay
       setTimeout(() => {
         formStatus.textContent = '';
         // Reload the page after success message is shown
         window.location.reload();
-      }, 3000);
+      }, 500);
       
     } catch (err) {
       console.error('Error creating post:', err);
