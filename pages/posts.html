@@ -3,9 +3,10 @@
     <head>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>LEARN 2 GROW | Posts</title>
-        <link rel="stylesheet" href="../styles/style.css">
+        <title>LEARN 2 GROW | Posts</title>        <link rel="stylesheet" href="../styles/style.css">
         <link rel="stylesheet" href="../styles/posts-public.css">
+        <link rel="stylesheet" href="../styles/image-modal.css">
+        <link rel="stylesheet" href="../styles/donation-modal.css">
         <link rel="stylesheet" href="../styles/debug.css">
         <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     </head>
@@ -119,22 +120,29 @@
                     <button class="donate-btn"><i class='bx bx-donate-heart'></i> Donate Now</button>
                     <button class="share-btn"><i class='bx bx-share'></i> Share</button>
                     <button class="message-btn" data-user-id=""><i class='bx bx-message-square'></i> Message</button>
+                    <button class="delete-btn" style="display: none;"><i class='bx bx-trash'></i> Delete</button>
                 </div>
                 <div class="donation-modal">
                     <div class="modal-content">
                         <span class="close-modal">&times;</span>
-                        <h3></h3>
-                        <div class="qr-container">
+                        <h3></h3>                        <div class="qr-container">
                             <img src="" alt="GCash QR Code" class="qr-code">
                         </div>
                         <p>Scan this QR code with your GCash app to donate</p>
+                        <p class="qr-hint"><small>(Click on the QR code to enlarge)</small></p>
                     </div>
                 </div>
-            </div>        </template>
-          <script src="../scripts/script.js"></script>
+            </div>        </template>        <!-- Image Modal for expanded view -->
+        <div id="imageModal" class="image-modal">
+            <span class="close-image-modal">&times;</span>
+            <img class="modal-image-content" id="expandedImage">
+            <div id="imageModalCaption"></div>
+        </div>        <script src="../scripts/script.js"></script>
         <script src="../scripts/auth.js"></script>
+        <script src="../scripts/form-utilities.js"></script>
         <script src="../scripts/profile-messaging.js"></script>
         <script src="../scripts/posts.js"></script>
+        <script src="../scripts/qr-code-enhanced.js"></script>
           <!-- Debug Tools -->
         <div class="debug-tools" style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; display: none;">
             <button onclick="window.location.href = '/index.html';">Login</button>

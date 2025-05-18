@@ -160,7 +160,15 @@ function setupPostForm() {
     e.preventDefault();
     const formStatus = document.getElementById('form-status');
     formStatus.textContent = 'Submitting your post...';
-      try {      // Get current user data or create debug user if needed
+    
+    // Temporarily disable form elements while submitting to prevent double submissions
+    const formElements = storyForm.querySelectorAll('button, input, textarea, select');
+    formElements.forEach(element => {
+      element.disabled = true;
+    });
+    
+    try {
+      // Get current user data or create debug user if needed
       let currentUser = getCurrentUser();
       console.log('Current user data:', currentUser);
       
@@ -180,6 +188,9 @@ function setupPostForm() {
           console.error('Unable to create valid user session');
           formStatus.textContent = 'You must be logged in to post.';
           formStatus.style.color = 'red';
+          
+          // Re-enable form elements
+          enableFormElements();
           return;
         }
       }
@@ -237,8 +248,7 @@ function setupPostForm() {
           email: currentUser.email
         };
       }
-      
-      displayNewPost(newPost, currentUser);
+        displayNewPost(newPost, currentUser);
       
       // Reset form fields
       storyForm.reset();
@@ -248,15 +258,22 @@ function setupPostForm() {
       formStatus.textContent = 'Your story has been successfully posted!';
       formStatus.style.color = 'green';
       
-      // Clear the status message after 3 seconds
+      // Re-enable form elements
+      enableFormElements();
+        // Clear the status message after 3 seconds
       setTimeout(() => {
         formStatus.textContent = '';
+        // Reload the page after success message is shown
+        window.location.reload();
       }, 3000);
       
     } catch (err) {
       console.error('Error creating post:', err);
       formStatus.textContent = `Error: ${err.message || 'Something went wrong'}`;
       formStatus.style.color = 'red';
+      
+      // Re-enable form elements even if there's an error
+      enableFormElements();
     }
   });
 }
@@ -306,12 +323,14 @@ function displayNewPost(post, currentUser) {
     postElement.querySelector('.post-date').textContent = formatDate(post.createdAt);
     postElement.querySelector('.post-title').textContent = post.title;
     postElement.querySelector('.post-content p').textContent = post.content;
-    
-    // Handle image if available
+      // Handle image if available
     const postImage = postElement.querySelector('.post-image');
     if (post.imageUrl && postImage) {
       postImage.src = post.imageUrl;
       postImage.style.display = 'block';
+      postImage.classList.add('clickable-image');
+      postImage.setAttribute('data-title', post.title);
+      postImage.addEventListener('click', expandImage);
     } else if (postImage) {
       postImage.style.display = 'none';
     }
@@ -338,8 +357,7 @@ function displayNewPost(post, currentUser) {
       postElement.setAttribute('data-qrcode', post.qrCodeUrl);
     }
       // Add post ID as data attribute for reference
-    postElement.dataset.postId = post._id;
-      // Set up the message button to link to the author
+    postElement.dataset.postId = post._id;    // Set up the message button to link to the author
     const messageBtn = postElement.querySelector('.message-btn');
     if (messageBtn) {
       let authorId = null;
@@ -366,6 +384,13 @@ function displayNewPost(post, currentUser) {
         // Hide message button if the post is from the current user
         if (currentUser && (currentUser._id === authorId)) {
           messageBtn.style.display = 'none';
+          
+          // Show delete button for the user's own posts
+          const deleteBtn = postElement.querySelector('.delete-btn');
+          if (deleteBtn) {
+            deleteBtn.style.display = 'inline-flex';
+            deleteBtn.dataset.postId = post._id;
+          }
         }
       } else {
         // If no valid author ID found, hide the message button
@@ -471,6 +496,17 @@ function getCurrentUser() {
 function setupPostInteractions(currentUser) {
   const donateButtons = document.querySelectorAll('.donate-btn');
   const shareButtons = document.querySelectorAll('.share-btn');
+  const deleteButtons = document.querySelectorAll('.delete-btn:not(.event-bound)');
+  const qrCodes = document.querySelectorAll('.qr-code:not(.clickable-image)');
+  
+  // Add click handlers to all QR codes
+  qrCodes.forEach(qrCode => {
+    if (qrCode.src) {
+      qrCode.classList.add('clickable-image');
+      qrCode.setAttribute('data-title', 'Donation QR Code');
+      qrCode.addEventListener('click', expandImage);
+    }
+  });
     // Handle donate buttons
   donateButtons.forEach(button => {
     button.addEventListener('click', function(e) {
@@ -493,8 +529,7 @@ function setupPostInteractions(currentUser) {
           const authorName = postCard.querySelector('.post-author').textContent || 'this story';
           modalTitle.textContent = `Donate to ${authorName}`;
         }
-        
-        // Ensure QR code is displayed if available
+          // Ensure QR code is displayed if available
         const qrImg = modal.querySelector('.qr-code');
         if (qrImg && qrImg.getAttribute('src') === '') {
           // Find the QR code URL from post data
@@ -502,6 +537,13 @@ function setupPostInteractions(currentUser) {
           if (qrCodeUrl) {
             qrImg.src = qrCodeUrl;
           }
+        }
+        
+        // Make the QR code clickable to expand
+        if (qrImg && !qrImg.classList.contains('clickable-image')) {
+          qrImg.classList.add('clickable-image');
+          qrImg.setAttribute('data-title', `${modalTitle ? modalTitle.textContent : 'Donation'} QR Code`);
+          qrImg.addEventListener('click', expandImage);
         }
         
         modal.style.display = 'flex';
@@ -542,6 +584,25 @@ function setupPostInteractions(currentUser) {
       }
     });
   });
+    // Handle delete buttons
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      const postCard = this.closest('.post-card');
+      const postId = postCard.dataset.postId;
+      
+      if (!currentUser || !currentUser.token) {
+        alert('You must be logged in to delete your post');
+        return;
+      }
+      
+      if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+        deletePost(postId, currentUser.token, postCard);
+      }
+    });
+    
+    // Mark button as having event listener bound
+    button.classList.add('event-bound');
+  });
   
   // Handle modal close buttons
   document.querySelectorAll('.close-modal').forEach(closeBtn => {
@@ -551,9 +612,113 @@ function setupPostInteractions(currentUser) {
   });
 }
 
+// Function to delete a post
+async function deletePost(postId, token, postElement) {
+  try {
+    const response = await fetch(`/api/posts/${postId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Server error: ${response.status}`);
+    }
+    
+    // Remove the post from the UI
+    if (postElement && postElement.parentNode) {
+      postElement.parentNode.removeChild(postElement);
+    }
+    
+    // Show a success message
+    alert('Post deleted successfully');
+    
+    // Check if there are no posts left and show the "no posts" message if needed
+    const postsContainer = document.getElementById('postsContainer');
+    const noPostsMessage = document.getElementById('no-posts-message');
+    
+    if (postsContainer && postsContainer.children.length === 0 && noPostsMessage) {
+      noPostsMessage.style.display = 'block';
+    }
+  } catch (err) {
+    console.error('Error deleting post:', err);
+    alert(`Error deleting post: ${err.message || 'Something went wrong'}`);
+  }
+}
+
 // Initialize when DOM content is loaded
 document.addEventListener('DOMContentLoaded', () => {
   if (window.location.pathname.includes('posts.html')) {
     initializePostsFunctionality();
+    
+    // Add click handler for the image modal close button
+    const closeModal = document.querySelector('.close-image-modal');
+    if (closeModal) {
+      closeModal.addEventListener('click', closeImageModal);
+    }
+    
+    // Close image modal when clicking outside the image
+    const imageModal = document.getElementById('imageModal');
+    if (imageModal) {
+      imageModal.addEventListener('click', function(event) {
+        if (event.target === imageModal) {
+          closeImageModal();
+        }
+      });
+    }
   }
 });
+
+// Function to handle expanding images when clicked
+function expandImage() {
+  const modal = document.getElementById('imageModal');
+  const modalImg = document.getElementById('expandedImage');
+  const captionText = document.getElementById('imageModalCaption');
+  
+  // Set the modal image source and caption
+  modalImg.src = this.src;
+  
+  // Use the data-title attribute if available, otherwise use the alt text
+  const caption = this.getAttribute('data-title') || this.alt || 'Image';
+  captionText.innerHTML = caption;
+  
+  // Display the modal
+  modal.style.display = 'flex';
+  
+  // Add a small delay before adding the visible class for animation
+  setTimeout(() => {
+    modal.classList.add('visible');
+  }, 10);
+  
+  // Add keyboard support for closing the modal with Escape key
+  document.addEventListener('keydown', function closeOnEscape(e) {
+    if (e.key === 'Escape') {
+      closeImageModal();
+      document.removeEventListener('keydown', closeOnEscape);
+    }
+  });
+  
+  // Prevent scrolling of background content
+  document.body.style.overflow = 'hidden';
+}
+
+// Function to close the image modal
+function closeImageModal() {
+  const modal = document.getElementById('imageModal');
+  modal.classList.remove('visible');
+  
+  // Wait for transition to complete before hiding the modal
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 300);
+  
+  // Re-enable scrolling and form elements
+  document.body.style.overflow = '';
+  
+  // Use the enableFormElements function from form-utilities.js if available
+  if (typeof enableFormElements === 'function') {
+    enableFormElements();
+  }
+}

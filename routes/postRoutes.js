@@ -188,4 +188,34 @@ router.post('/upload', upload.single('image'), (req, res) => {
   }
 });
 
+/**
+ * @desc    Delete a post
+ * @route   DELETE /api/posts/:id
+ * @access  Private
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    // Check if user is the author of the post
+    if (post.author.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Not authorized to delete this post' });
+    }
+    
+    await post.deleteOne();
+    
+    res.json({ success: true, message: 'Post deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    if (err instanceof mongoose.Error.CastError) {
+      return res.status(400).json({ message: 'Invalid post ID' });
+    }
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
