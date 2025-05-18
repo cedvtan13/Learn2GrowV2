@@ -481,3 +481,11 @@
         max-width: 75%;
     }
 }
+
+/* No results message styling */
+.no-results {
+    color: #b0b0b0;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
