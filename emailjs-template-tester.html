@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmailJS Template Tester</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #4a8fe7;
+        }
+        select, input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>EmailJS Template Tester</h1>
+        <p>Use this tool to test your EmailJS templates.</p>
+        
+        <div>
+            <label for="template">Select Template:</label>
+            <select id="template">
+                <option value="template_verification">Recipient Verification</option>
+                <option value="template_existing_user">Existing User</option>
+                <option value="template_pending">Pending Request</option>
+                <option value="template_admin_notify">Admin Notification</option>
+                <option value="template_approval">Recipient Approval</option>
+                <option value="template_rejection">Recipient Rejection</option>
+                <option value="template_password_reset">Password Reset</option>
+            </select>
+        </div>
+        
+        <div>
+            <label for="email">Test Email (recipient):</label>
+            <input type="email" id="email" placeholder="Enter test email address">
+        </div>
+        
+        <div>
+            <button id="send">Send Test Email</button>
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+    
+    <script>
+        // Initialize EmailJS with your user ID
+        (function() {
+            const userId = '6AMIt59XHKkB8Yyy9'; // Your EmailJS User ID
+            emailjs.init(userId);
+        })();
+        
+        // Add event listener to the send button
+        document.getElementById('send').addEventListener('click', function() {
+            const templateId = document.getElementById('template').value;
+            const recipientEmail = document.getElementById('email').value;
+            const statusElement = document.getElementById('status');
+            
+            // Validate email
+            if (!recipientEmail) {
+                statusElement.className = 'status error';
+                statusElement.textContent = 'Please enter a valid email address';
+                statusElement.style.display = 'block';
+                return;
+            }
+            
+            // Set template parameters based on the selected template
+            const templateParams = getTemplateParams(templateId, recipientEmail);
+            
+            // Show sending status
+            statusElement.className = 'status';
+            statusElement.textContent = 'Sending email...';
+            statusElement.style.display = 'block';
+            
+            // Send the email
+            emailjs.send('service_1m48fmq', templateId, templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                    statusElement.className = 'status success';
+                    statusElement.textContent = `Email sent successfully! Status: ${response.status}`;
+                }, function(error) {
+                    console.log('FAILED...', error);
+                    statusElement.className = 'status error';
+                    statusElement.textContent = `Failed to send email: ${error.text}`;
+                });
+        });
+        
+        // Get template parameters based on template ID
+        function getTemplateParams(templateId, email) {
+            const baseParams = {
+                to_name: 'Test User',
+                to_email: email,
+                website_url: 'http://localhost:3000'
+            };
+            
+            switch (templateId) {
+                case 'template_verification':
+                    return baseParams;
+                    
+                case 'template_existing_user':
+                    return {
+                        ...baseParams,
+                        forgot_password_url: 'http://localhost:3000/forgot-password.html'
+                    };
+                    
+                case 'template_pending':
+                    return baseParams;
+                    
+                case 'template_admin_notify':
+                    return {
+                        ...baseParams,
+                        admin_email: email,
+                        recipient_name: 'Test Recipient',
+                        recipient_email: 'recipient@example.com'
+                    };
+                    
+                case 'template_approval':
+                    return {
+                        ...baseParams,
+                        login_url: 'http://localhost:3000/login'
+                    };
+                    
+                case 'template_rejection':
+                    return {
+                        ...baseParams,
+                        rejection_reason: 'This is a test rejection reason.'
+                    };
+                    
+                case 'template_password_reset':
+                    return {
+                        ...baseParams,
+                        reset_link: 'http://localhost:3000/reset-password.html?token=test-token-12345'
+                    };
+                    
+                default:
+                    return baseParams;
+            }
+        }
+    </script>
+</body>
+</html>

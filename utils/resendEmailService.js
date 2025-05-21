@@ -34,11 +34,10 @@ export const sendPasswordResetEmail = async (name, email, resetToken) => {
     // Ensure we're only sending to verified emails in development
     if (process.env.NODE_ENV !== 'production' && !VERIFIED_EMAILS.includes(email)) {
       console.log(`Cannot send to non-verified email: ${email} in development mode`);
-      return { success: false, message: `Cannot send to non-verified email in dev mode. Allowed emails: ${VERIFIED_EMAILS.join(', ')}` };
-    }
+      return { success: false, message: `Cannot send to non-verified email in dev mode. Allowed emails: ${VERIFIED_EMAILS.join(', ')}` };    }
 
     // Create the reset link
-    const resetLink = `${websiteUrl}/pages/reset-password.html?token=${resetToken}`;
+    const resetLink = `${websiteUrl}/reset-password.html?token=${resetToken}`;
 
     // Send the email
     const response = await resend.emails.send({
@@ -90,8 +89,18 @@ export const processRecipientRegistration = async (name, email) => {
       // User has a pending request, send notification
       return await sendPendingRequestEmail(name, email);
     } else {
-      // New user, send verification email
-      return await sendNewRecipientVerificationEmail(name, email);
+      // New user, generate a verification token and send verification email
+      const jwt = (await import('jsonwebtoken')).default;
+      const verificationToken = jwt.sign(
+        { email },
+        process.env.JWT_SECRET || 'dev-secret-key',
+        { expiresIn: '24h' }
+      );
+      
+      // Store the token in the database (we'll implement this in userRoutes.js)
+      
+      // Send verification email with token
+      return await sendNewRecipientVerificationEmail(name, email, verificationToken);
     }
   } catch (error) {
     console.error('Error processing recipient registration email:', error);
@@ -105,15 +114,24 @@ export const processRecipientRegistration = async (name, email) => {
  * @param {string} email - User's email
  * @returns {Promise<Object>} - Response from Resend API
  */
-export const sendNewRecipientVerificationEmail = async (name, email) => {
-  const subject = 'Welcome to Learn2Grow - Registration Received';
+export const sendNewRecipientVerificationEmail = async (name, email, verificationToken) => {
+  // Create verification link with token
+  const verificationLink = `${websiteUrl}/api/users/verify-email?token=${verificationToken}`;
+  const subject = 'Welcome to Learn2Grow - Verify Your Email';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h2 style="color: #4CAF50;">Welcome to Learn2Grow!</h2>
       <p>Hello ${name},</p>
-      <p>Thank you for registering as a recipient with Learn2Grow. Your application has been received and is pending review by our admin team.</p>
-      <p>We'll notify you once your application has been approved. This typically takes 1-2 business days.</p>
+      <p>Thank you for registering as a recipient with Learn2Grow. To complete your registration, please verify your email address by clicking the button below:</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${verificationLink}" style="display: inline-block; background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Verify My Email</a>
+      </div>
+      
+      <p>After verification, your application will be reviewed by our admin team. This typically takes 1-2 business days.</p>
+      <p>If you're unable to click the button, you can copy and paste the following link into your browser:</p>
+      <p style="word-break: break-all; font-size: 12px; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">${verificationLink}</p>
       <hr style="border: 1px solid #f0f0f0; margin: 20px 0;">
       <p>If you have any questions, please reply to this email or contact support.</p>
       <p>Best regards,<br>The Learn2Grow Team</p>
@@ -203,10 +221,9 @@ export const sendRecipientRequestToAdmin = async (recipientName, recipientEmail)
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Email:</strong></td>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;">${recipientEmail}</td>
         </tr>
-      </table>
-      <p>Please log in to the admin dashboard to review this application.</p>
+      </table>      <p>Please log in to the admin dashboard to review this application.</p>
       <div style="margin: 20px 0;">
-        <a href="${websiteUrl}/admin" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">Go to Admin Dashboard</a>
+        <a href="${websiteUrl}/admin.html" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">Go to Admin Dashboard</a>
       </div>
       <hr style="border: 1px solid #f0f0f0; margin: 20px 0;">
       <p>Best regards,<br>Learn2Grow System</p>
@@ -229,10 +246,9 @@ export const sendRecipientApproval = async (name, email) => {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h2 style="color: #4CAF50;">Account Approved!</h2>
       <p>Hello ${name},</p>
-      <p>Great news! Your Learn2Grow recipient account has been approved by our admin team.</p>
-      <p>You can now log in to your account and access all recipient features:</p>
+      <p>Great news! Your Learn2Grow recipient account has been approved by our admin team.</p>      <p>You can now log in to your account and access all recipient features:</p>
       <div style="margin: 20px 0;">
-        <a href="${websiteUrl}/login" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">Log in to Your Account</a>
+        <a href="${websiteUrl}/index.html" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">Log in to Your Account</a>
       </div>
       <p>As a recipient, you can now:</p>
       <ul style="padding-left: 20px; line-height: 1.5;">

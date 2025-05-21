@@ -82,9 +82,8 @@ router.post('/forgot-password', async (req, res) => {
     user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    try {
-      // Import the email service
-      const { sendPasswordResetEmail } = await import('../utils/resendEmailService.js');
+    try {      // Import the email service
+      const { sendPasswordResetEmail } = await import('../utils/emailJSService.js');
       
       // Send password reset email
       await sendPasswordResetEmail(user.name, user.email, resetToken);
@@ -156,6 +155,70 @@ router.get('/profile', protect, async (req, res) => {
   }
 });
 
+router.get('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+    
+    if (!token) {
+      return res.status(400).json({ message: 'Verification token is required.' });
+    }
+
+    // Verify the token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+    } catch (err) {
+      return res.status(400).json({ message: 'Invalid or expired verification token.' });
+    }    // Import RecipientRequest model
+    const RecipientRequest = (await import('../models/recipientRequestModel.js')).default;
+    const User = (await import('../models/userModel.js')).default;
+    // Use emailJSService for notifications to ensure delivery
+    const { sendRecipientRequestToAdmin, sendRecipientApproval } = await import('../utils/emailJSService.js');
+
+    // Find the recipient request with this token and ensure it hasn't expired
+    const request = await RecipientRequest.findOne({
+      email: decoded.email,
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: Date.now() }
+    });
+
+    if (!request) {
+      return res.status(400).json({ message: 'Invalid or expired verification token.' });
+    }
+
+    // Update the request to mark email as verified and automatically approve
+    request.isEmailVerified = true;
+    request.status = 'approved';
+    request.verificationToken = null;
+    request.verificationTokenExpiry = null;
+    await request.save();
+    
+    // Create new user from approved request
+    const newUser = new User({
+      name: request.name,
+      email: request.email,
+      password: request.password,
+      role: 'Recipient'
+    });
+    
+    await newUser.save();
+    
+    // Send notifications
+    const adminNotification = await sendRecipientRequestToAdmin(request.name, request.email);
+    console.log("Admin notification sent:", adminNotification);
+    
+    // Also send approval email to the recipient
+    const approvalNotification = await sendRecipientApproval(request.name, request.email);
+    console.log("Approval notification sent:", approvalNotification);
+
+    // Redirect to a confirmation page or login page
+    return res.redirect('/verification-success.html');
+  } catch (err) {
+    console.error('Error in email verification:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 /**
  * @desc    Reset password with token
  * @route   POST /api/users/reset-password
@@ -220,35 +283,48 @@ router.post('/request-recipient', async (req, res) => {
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    
-    try {
-      // Import the models and services
+      try {      // Import the models and services
       const RecipientRequest = (await import('../models/recipientRequestModel.js')).default;
-      const resendEmailService = (await import('../utils/resendEmailService.js')).default;
+      
+      // IMPORTANT: Import email verification from emailJSService and other functions from resendEmailService
+      const { sendNewRecipientVerificationEmail } = await import('../utils/emailJSService.js');
+      const { sendExistingUserEmail } = await import('../utils/resendEmailService.js');
       
       // Check if user exists
       const exists = await User.findOne({ email });
       if (exists) {
         // Send email notification for existing user
-        await resendEmailService.sendExistingUserEmail(name, email);
+        await sendExistingUserEmail(name, email);
         return res.status(400).json({ message: 'Email already in use. We sent an email with further instructions.' });
       }
       
-      // Store the request
+      // Generate a verification token (valid for 24 hours)
+      const verificationToken = jwt.sign(
+        { email },
+        process.env.JWT_SECRET || 'dev-secret-key',
+        { expiresIn: '24h' }
+      );
+      
+      // Store the request with verification token
       const request = await RecipientRequest.create({
         name,
         email,
         password: hashedPassword,
-        status: 'pending'
+        status: 'pending',
+        verificationToken,
+        verificationTokenExpiry: Date.now() + 86400000 // 24 hours
       });
       
       console.log("Recipient request stored with ID:", request._id);
+      // Send verification email to user with token
+      console.log('Sending verification email with token:', verificationToken.substring(0, 20) + '...');
       
-      // Send verification email to user
-      await resendEmailService.sendNewRecipientVerificationEmail(name, email);
+      // Make sure we pass all necessary parameters including the verification token
+      const emailResult = await sendNewRecipientVerificationEmail(name, email, verificationToken);
+      console.log("Verification email sent:", emailResult);
       
-      // Send notification email to admin
-      await resendEmailService.sendRecipientRequestToAdmin(name, email);
+      // Don't send admin notification until email is verified
+      // Admin notification will be sent after verification
       
     } catch (storageError) {
       console.error('Error storing recipient request or sending email:', storageError);
@@ -270,14 +346,32 @@ router.get('/recipient-requests', protect, admin, async (req, res) => {
     // Import the RecipientRequest model
     const RecipientRequest = (await import('../models/recipientRequestModel.js')).default;
     
-    // Get all requests, newest first
-    const requests = await RecipientRequest.find()
+    // Get all requests that have verified emails, newest first
+    const requests = await RecipientRequest.find({ 
+      isEmailVerified: true 
+    })
       .sort({ createdAt: -1 })
-      .select('-password'); // Don't send password hashes
+      .select('-password -verificationToken -verificationTokenExpiry'); // Don't send sensitive data
     
     res.json(requests);
   } catch (err) {
     console.error('Error getting recipient requests:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all users (admin only)
+router.get('/', protect, admin, async (req, res) => {
+  try {
+    // Get all users, excluding sensitive information
+    const users = await User.find({})
+      .select('-password -resetPasswordToken -resetPasswordExpires')
+      .sort({ createdAt: -1 })
+      .lean();
+    
+    res.json(users);
+  } catch (err) {
+    console.error('Error getting users:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -290,16 +384,19 @@ router.put('/recipient-requests/:id', protect, admin, async (req, res) => {
     if (!['approved', 'rejected'].includes(status)) {
       return res.status(400).json({ message: 'Status must be either approved or rejected' });
     }
-    
-    // Import the RecipientRequest model and email service
+      // Import the RecipientRequest model and email service
     const RecipientRequest = (await import('../models/recipientRequestModel.js')).default;
-    const resendEmailService = (await import('../utils/resendEmailService.js')).default;
-    
-    // Find the request
+    const { sendRecipientApproval, sendRecipientRejection } = await import('../utils/emailJSService.js');
+      // Find the request
     const request = await RecipientRequest.findById(req.params.id);
     
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
+    }
+    
+    // Check if email is verified
+    if (!request.isEmailVerified) {
+      return res.status(400).json({ message: 'Email not verified. User must verify email before approval/rejection.' });
     }
     
     // If approving, create a new user
@@ -311,12 +408,10 @@ router.put('/recipient-requests/:id', protect, admin, async (req, res) => {
         role: 'Recipient'
       });
       console.log("New Recipient user created");
-      
-      // Send approval email
-      await resendEmailService.sendRecipientApproval(request.name, request.email);
-    } else {
-      // Send rejection email
-      await resendEmailService.sendRecipientRejection(request.name, request.email, notes);
+        // Send approval email
+      await sendRecipientApproval(request.name, request.email);
+    } else {      // Send rejection email
+      await sendRecipientRejection(request.name, request.email, notes);
     }
     
     // Update request status
@@ -398,6 +493,71 @@ router.get('/:userId', protect, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error('Error fetching user by ID:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update user (admin only)
+router.put('/:userId', protect, admin, async (req, res) => {
+  try {
+    const { name, email, role } = req.body;
+    const userId = req.params.userId;
+
+    // Validate required fields
+    if (!name || !email || !role) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
+    // Validate role
+    if (!['Sponsor', 'Recipient', 'Admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    // Find user by ID
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update user data
+    user.name = name;
+    user.email = email;
+    user.role = role;
+
+    await user.save();
+
+    // Return updated user without sensitive data
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    });
+  } catch (err) {
+    console.error('Error updating user:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete user (admin only)
+router.delete('/:userId', protect, admin, async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Find user by ID
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting user:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -88,7 +88,7 @@ function showResetMessage(message, isSuccess) {
   const messageElem = document.getElementById('reset-message');
   if (messageElem) {
     messageElem.textContent = message;
-    messageElem.className = isSuccess ? 'success-message' : 'error-message';
+    messageElem.className = isSuccess ? 'message-box success' : 'message-box error';
     messageElem.style.display = 'block';
   }
 }

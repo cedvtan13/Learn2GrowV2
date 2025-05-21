@@ -2,6 +2,11 @@
 
 console.log('📝 auth.js loaded');
 
+// Function to check if a user is authenticated
+function isAuthenticated() {
+  return !!localStorage.getItem('token');
+}
+
 // Function to check if a valid token/user exists in localStorage
 function checkUserAuthentication() {
   const userData = localStorage.getItem('currentUser');
@@ -137,6 +142,7 @@ async function refreshTokenIfNeeded() {
 
 // Export functionality for use in other scripts
 window.auth = {
+  isAuthenticated,
   checkUserAuthentication,
   validateToken,
   requireAuthentication,

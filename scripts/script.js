@@ -203,13 +203,18 @@ if (loginForm) {
       }
     });
   }
-  
-  // Handle logout
+    // Handle logout
   document.addEventListener('click', function(e) {
     if (e.target && e.target.id === 'logout-link') {
       e.preventDefault();
       logoutUser();
       window.location.href = 'index.html';
+    }
+    
+    // Handle admin dashboard link click (dynamically added for admin users)
+    if (e.target && (e.target.id === 'admin-link' || e.target.closest('#admin-link'))) {
+      e.preventDefault();
+      window.location.href = 'admin.html';
     }
   });
   
@@ -326,14 +331,14 @@ function updateNavbar(isAuthenticated) {
     profileItem.innerHTML = `
       <div class="profile-icon">
         <span>${getInitials(currentUser.name)}</span>
-      </div>
-      <div class="profile-dropdown">
+      </div>      <div class="profile-dropdown">
         <div class="dropdown-header">
           <strong>${currentUser.name}</strong>
           <span>${currentUser.email}</span>
         </div>
         <ul>
           <li><a href="profile.html" id="profile-link"><i class='bx bx-user'></i> My Profile</a></li>
+          ${currentUser.role === 'Admin' ? '<li><a href="admin.html" id="admin-link"><i class="bx bx-shield-quarter"></i> Admin Dashboard</a></li>' : ''}
           <li><a href="settings.html" id="settings-link"><i class='bx bx-cog'></i> Settings</a></li>
           <li><a href="help.html" id="help-link"><i class='bx bx-help-circle'></i> Help</a></li>
           <li class="divider"></li>

@@ -10,6 +10,18 @@ const recipientRequestSchema = new mongoose.Schema({
     enum: ['pending', 'approved', 'rejected'], 
     default: 'pending' 
   },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationToken: {
+    type: String,
+    default: null
+  },
+  verificationTokenExpiry: {
+    type: Date,
+    default: null
+  },
   notes: { type: String }, // For admin notes
   reviewedBy: { 
     type: mongoose.Types.ObjectId, 

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Learn2Grow</title>    <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="/styles/admin.css">
+    <link rel="stylesheet" href="/styles/admin-overrides.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-page">
+    <!-- Navigation Bar -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="/" class="nav-logo">Learn2Grow</a>
+            </div>
+            <div class="nav-right" id="nav-menu">
+                <a href="/index.html">Home</a>
+                <a href="/posts.html">Posts</a>
+                <a href="/messages.html">Messages</a>
+                <a href="/profile.html">Profile</a>
+                <a href="/admin.html" class="active">Admin</a>
+                <!-- Profile dropdown will be added here dynamically -->
+            </div>
+            <div class="menu-icon" id="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container admin-dashboard">
+        <h1>Admin Dashboard</h1>
+        
+        <div class="admin-tabs">
+            <button class="tab-btn active" data-tab="recipient-requests">Recipient Requests</button>
+            <button class="tab-btn" data-tab="users">Manage Users</button>
+            <button class="tab-btn" data-tab="reports">Reports</button>
+        </div>
+        
+        <div class="tab-content">
+            <!-- Recipient Requests Tab -->
+            <div id="recipient-requests" class="tab-pane active">
+                <h2>Recipient Requests</h2>
+                <div class="filters">
+                    <select id="status-filter">
+                        <option value="all">All</option>
+                        <option value="pending" selected>Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <div class="search-box">
+                        <input type="text" id="search-requests" placeholder="Search by name or email">
+                        <button id="search-btn"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                
+                <div class="requests-container">
+                    <table id="requests-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requests-list">
+                            <!-- Requests will be loaded here -->
+                        </tbody>
+                    </table>
+                    <div id="no-requests" class="hidden">
+                        <p>No pending recipient requests found.</p>
+                    </div>
+                    <div id="loading-requests">
+                        <p>Loading requests...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Users Tab -->
+            <div id="users" class="tab-pane">
+                <h2>Manage Users</h2>
+                <div class="filters">
+                    <select id="role-filter">
+                        <option value="all">All Roles</option>
+                        <option value="Sponsor">Sponsors</option>
+                        <option value="Recipient">Recipients</option>
+                        <option value="Admin">Admins</option>
+                    </select>
+                    <div class="search-box">
+                        <input type="text" id="search-users" placeholder="Search by name or email">
+                        <button id="search-users-btn"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                
+                <div class="users-container">
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list">
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                    <div id="loading-users">
+                        <p>Loading users...</p>
+                    </div>
+                </div>
+            </div>
+              <!-- Reports Tab -->
+            <div id="reports" class="tab-pane">
+                <h2>Reports & Analytics</h2>
+                
+                <!-- Key Metrics Overview -->
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-title">Total Users</div>
+                        <div class="metric-value" id="total-users">0</div>
+                        <div class="metric-change positive">+5% this month</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Sponsors</div>
+                        <div class="metric-value" id="total-sponsors">0</div>
+                        <div class="metric-change positive">+3% this month</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Recipients</div>
+                        <div class="metric-value" id="total-recipients">0</div>
+                        <div class="metric-change positive">+8% this month</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Pending Requests</div>
+                        <div class="metric-value" id="pending-requests">0</div>
+                        <div class="metric-change">No change</div>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="chart-container">
+                    <div class="report-header">
+                        <div class="report-title">User Growth</div>
+                        <div class="report-date">Last 30 Days</div>
+                    </div>
+                    <div class="activity-chart">
+                        <p>Coming soon: Interactive user growth chart</p>
+                    </div>
+                </div>
+                
+                <div class="report-card">
+                    <div class="report-header">
+                        <div class="report-title">Recent Activity</div>
+                        <div class="report-date">Last 7 Days</div>
+                    </div>
+                    <div class="report-content">
+                        <div class="loading-indicator">
+                            <div class="loading-spinner"></div>
+                            <p>Loading activity data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Review Modal -->
+    <div id="review-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Review Recipient Request</h2>
+            <div id="request-details">
+                <p><strong>Name:</strong> <span id="modal-name"></span></p>
+                <p><strong>Email:</strong> <span id="modal-email"></span></p>
+                <p><strong>Date Submitted:</strong> <span id="modal-date"></span></p>
+                <p><strong>Reason for Joining:</strong></p>
+                <div id="modal-reason" class="request-reason"></div>
+            </div>
+            
+            <div class="action-buttons">
+                <div class="form-group">
+                    <label for="admin-notes">Notes (Optional - will be sent to user if rejected):</label>
+                    <textarea id="admin-notes" rows="3"></textarea>
+                </div>
+                <button id="approve-btn" class="approve-btn">Approve</button>
+                <button id="reject-btn" class="reject-btn">Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Edit Modal -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit User</h2>
+            <form id="edit-user-form">
+                <div class="form-group">
+                    <label for="edit-name">Name:</label>
+                    <input type="text" id="edit-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-email">Email:</label>
+                    <input type="email" id="edit-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-role">Role:</label>
+                    <select id="edit-role">
+                        <option value="Sponsor">Sponsor</option>
+                        <option value="Recipient">Recipient</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="action-buttons">
+                    <button type="submit" class="approve-btn">Save Changes</button>
+                    <button type="button" id="delete-user-btn" class="reject-btn">Delete User</button>
+                </div>
+            </form>
+        </div>
+    </div>    <script src="/scripts/nav.js"></script>
+    <script src="/scripts/auth.js"></script>
+    <script src="/scripts/script.js"></script>
+    <script src="/scripts/admin.js"></script>
+</body>
+</html>

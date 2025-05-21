@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification Successful - Learn2Grow</title>
+    <link rel="stylesheet" href="/styles/style.css">
+    <style>
+        .verification-container {
+            max-width: 600px;
+            margin: 80px auto;
+            padding: 40px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+        
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #3d8b40;
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="success-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+            </svg>
+        </div>        <h1>Email Verified Successfully!</h1>
+        <p>Thank you for verifying your email address. Your account has been automatically approved!</p>
+        <p>You can now log in with your email and password to access all the features of your recipient account.</p>
+        <p>Welcome to Learn2Grow! We're excited to have you join our community.</p>
+        <a href="../index.html" class="btn">Log In Now</a>
+    </div>
+    
+    <script>
+        // Redirect to login page after 5 seconds if user doesn't click the button
+        setTimeout(() => {
+            window.location.href = '../index.html';
+        }, 60000); // 60 seconds
+    </script>
+</body>
+</html>

@@ -29,6 +29,35 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'pages', 'index.html'));
 });
 
+// Add redirects for pages that might be linked without .html extension
+app.get('/admin', (req, res) => {
+  res.redirect('/admin.html');
+});
+
+app.get('/login', (req, res) => {
+  res.redirect('/index.html');
+});
+
+app.get('/posts', (req, res) => {
+  res.redirect('/posts.html');
+});
+
+app.get('/profile', (req, res) => {
+  res.redirect('/profile.html');
+});
+
+app.get('/messages', (req, res) => {
+  res.redirect('/messages.html');
+});
+
+app.get('/forgot-password', (req, res) => {
+  res.redirect('/forgot-password.html');
+});
+
+app.get('/reset-password', (req, res) => {
+  res.redirect('/reset-password.html');
+});
+
 // mount your API
 app.use('/api/users', userRoutes);
 
