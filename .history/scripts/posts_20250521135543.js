@@ -8,7 +8,6 @@ function debugAuthStatus() {
   if (currentUser) {
     console.log('User:', currentUser.name);
     console.log('Email:', currentUser.email);
-    console.log('Role:', currentUser.role);
     console.log('Token exists:', !!currentUser.token);
     if (currentUser.token) {
       console.log('Token preview:', currentUser.token.substring(0, 20) + '...');
@@ -28,7 +27,7 @@ function debugAuthStatus() {
   // Update form status
   if (formStatus) {
     if (isAuthenticated) {
-      formStatus.textContent = `Ready to post as ${currentUser.name} (${currentUser.role})`;
+      formStatus.textContent = `Ready to post as ${currentUser.name}`;
       formStatus.style.color = 'green';
     } else {
       formStatus.textContent = 'Not logged in or token missing';
@@ -45,7 +44,7 @@ function debugAuthStatus() {
   // Update authentication status text
   if (authStatusText) {
     if (isAuthenticated) {
-      authStatusText.textContent = `Logged in as ${currentUser.name} (${currentUser.role})`;
+      authStatusText.textContent = `Logged in as ${currentUser.name}`;
       authStatusText.style.color = 'green';
     } else {
       authStatusText.textContent = 'Not authenticated';
@@ -194,19 +193,6 @@ function setupPostForm() {
           enableFormElements();
           return;
         }
-      }
-      
-      // Check if user is a Recipient (only Recipients can post)
-      if (currentUser.role !== 'Recipient' && currentUser.role !== 'Admin') {
-        console.error('User does not have permission to create posts');
-        formStatus.textContent = 'Only Recipients can create posts.';
-        formStatus.style.color = 'red';
-        
-        // Re-enable form elements
-        formElements.forEach(element => {
-          element.disabled = false;
-        });
-        return;
       }
       
       console.log('Token available:', currentUser.token.substring(0, 20) + '...');
@@ -388,33 +374,24 @@ function displayNewPost(post, currentUser) {
           authorId = post.author.id;
         }
       }
-        if (authorId) {
+      
+      if (authorId) {
         messageBtn.setAttribute('onclick', `startConversation('${authorId}')`);
         messageBtn.dataset.userId = authorId;
         messageBtn.style.display = 'inline-flex'; // Make sure it's visible
         
-        // Handle delete button visibility based on roles and ownership
-        const deleteBtn = postElement.querySelector('.delete-btn');
-        if (deleteBtn) {
-          // Show delete button for:
-          // 1. User's own posts (any role)
-          // 2. Admin users for any post
-          const isOwnPost = currentUser && (currentUser._id === authorId);
-          const isAdmin = currentUser && currentUser.role === 'Admin';
-          
-          if (isOwnPost || isAdmin) {
-            deleteBtn.style.display = 'inline-flex';
-            deleteBtn.dataset.postId = post._id;
-          } else {
-            deleteBtn.style.display = 'none';
-          }
-        }
-        
         // Hide message button if the post is from the current user
         if (currentUser && (currentUser._id === authorId)) {
           messageBtn.style.display = 'none';
+          
+          // Show delete button for the user's own posts
+          const deleteBtn = postElement.querySelector('.delete-btn');
+          if (deleteBtn) {
+            deleteBtn.style.display = 'inline-flex';
+            deleteBtn.dataset.postId = post._id;
+          }
         }
-      }else {
+      } else {
         // If no valid author ID found, hide the message button
         messageBtn.style.display = 'none';
       }
@@ -469,27 +446,15 @@ async function initializePostsFunctionality() {
       if (canCreatePosts) {
         postCreationSection.style.display = 'block';
       } else {
-        // Hide the post creation form for sponsors
         postCreationSection.style.display = 'none';
-        
         // Add a message explaining that sponsors can't create posts
-        // First, check if we've already added the message
-        const existingSponsorMessage = document.querySelector('.sponsor-message');        if (!existingSponsorMessage) {
-          const sponsorMessage = document.createElement('div');
-          sponsorMessage.className = 'sponsor-message';
-          sponsorMessage.innerHTML = `
-            <h3>Welcome, Sponsor!</h3>
-          `;
-          // Insert at the beginning of posts-content
-          postsContent.insertBefore(sponsorMessage, postsContent.firstChild);
-          
-          // Remove the element completely after animation ends (6 seconds total)
-          setTimeout(() => {
-            if (sponsorMessage.parentNode) {
-              sponsorMessage.parentNode.removeChild(sponsorMessage);
-            }
-          }, 6000);
-        }
+        const sponsorMessage = document.createElement('div');
+        sponsorMessage.className = 'sponsor-message';
+        sponsorMessage.innerHTML = `
+          <h3>Welcome, Sponsor!</h3>
+          <p>As a sponsor, you can view and support recipient stories, but cannot create posts.</p>
+        `;
+        postsContent.insertBefore(sponsorMessage, postsContent.firstChild);
       }
     }
   } else {
@@ -659,25 +624,14 @@ function setupPostInteractions(currentUser) {
       }
     });
   });
-  // Handle delete buttons
+    // Handle delete buttons
   deleteButtons.forEach(button => {
     button.addEventListener('click', function(e) {
       const postCard = this.closest('.post-card');
       const postId = postCard.dataset.postId;
       
       if (!currentUser || !currentUser.token) {
-        alert('You must be logged in to delete posts');
-        return;
-      }
-      
-      // Check if the user is an Admin or the author of the post
-      const isAdmin = currentUser.role === 'Admin';
-      const authorElement = postCard.querySelector('.post-author');
-      const authorName = authorElement ? authorElement.textContent : '';
-      const isAuthor = authorName === currentUser.name;
-      
-      if (!isAdmin && !isAuthor) {
-        alert('You do not have permission to delete this post');
+        alert('You must be logged in to delete your post');
         return;
       }
       

@@ -23,22 +23,21 @@
   border-left: 4px solid #4285f4;
   border-radius: 8px;
   margin: 20px auto;
-  padding: 15px;
+  padding: 20px;
   max-width: 800px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  text-align: center;
-  animation: fadeOut 1s ease-in-out 5s forwards;
 }
 
 .sponsor-message h3 {
   color: #4285f4;
-  margin: 0;
+  margin-top: 0;
   font-size: 1.3rem;
 }
 
-@keyframes fadeOut {
-  0% { opacity: 1; }
-  100% { opacity: 0; height: 0; padding: 0; margin: 0; border: 0; }
+.sponsor-message p {
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 0;
 }
 
 .login-prompt h3 {

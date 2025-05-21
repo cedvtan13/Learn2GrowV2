@@ -82,29 +82,13 @@ router.post('/forgot-password', async (req, res) => {
     user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    try {
-      // Import the email service
-      const { sendPasswordResetEmail } = await import('../utils/resendEmailService.js');
-      
-      // Send password reset email
-      await sendPasswordResetEmail(user.name, user.email, resetToken);
-      
-      return res.status(200).json({ 
-        message: 'Password reset instructions have been sent to your email.',
-        // For development purposes, return the token directly
-        ...(process.env.NODE_ENV !== 'production' && { resetToken })
-      });
-    } catch (emailError) {
-      console.error('Error sending password reset email:', emailError);
-      
-      // Even if email fails, return success to the user
-      // This prevents email enumeration attacks
-      return res.status(200).json({ 
-        message: 'If your email exists in our system, password reset instructions have been sent.',
-        // For development purposes, return the token directly
-        ...(process.env.NODE_ENV !== 'production' && { resetToken })
-      });
-    }
+    // In a production environment, you would send an email with a link containing the token
+    // For now, just return success to indicate the email was found and token generated
+    return res.status(200).json({ 
+      message: 'Password reset instructions have been sent to your email.',
+      // Return the token for testing purposes - remove in production
+      resetToken: resetToken
+    });
   } catch (err) {
     console.error('Error in forgot password:', err);
     return res.status(500).json({ message: 'Server error' });

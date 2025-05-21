@@ -474,21 +474,16 @@ async function initializePostsFunctionality() {
         
         // Add a message explaining that sponsors can't create posts
         // First, check if we've already added the message
-        const existingSponsorMessage = document.querySelector('.sponsor-message');        if (!existingSponsorMessage) {
+        const existingSponsorMessage = document.querySelector('.sponsor-message');
+        if (!existingSponsorMessage) {
           const sponsorMessage = document.createElement('div');
           sponsorMessage.className = 'sponsor-message';
           sponsorMessage.innerHTML = `
             <h3>Welcome, Sponsor!</h3>
+            <p>As a sponsor, you can view and support recipient stories, but cannot create posts.</p>
           `;
           // Insert at the beginning of posts-content
           postsContent.insertBefore(sponsorMessage, postsContent.firstChild);
-          
-          // Remove the element completely after animation ends (6 seconds total)
-          setTimeout(() => {
-            if (sponsorMessage.parentNode) {
-              sponsorMessage.parentNode.removeChild(sponsorMessage);
-            }
-          }, 6000);
         }
       }
     }

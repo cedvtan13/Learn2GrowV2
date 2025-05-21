@@ -160,46 +160,24 @@ if (loginForm) {
       }
     });
   }
+
   // Handle forgot password form submission
   const forgotPasswordForm = document.getElementById('forgot-password-form');
   if (forgotPasswordForm) {
-    forgotPasswordForm.addEventListener('submit', async function(event) {
+    forgotPasswordForm.addEventListener('submit', function(event) {
       event.preventDefault();
       
       const email = document.getElementById('reset-email').value;
       const messageElem = document.getElementById('reset-message');
-      const submitButton = this.querySelector('button[type="submit"]');
       
-      // Disable the button and show loading state
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Processing...';
-      }
-      
-      // Clear previous messages
-      messageElem.style.display = "none";
-      
-      try {
-        const result = await resetPassword(email);
-        
-        if (result) {
-          messageElem.textContent = "Password reset email sent. Please check your inbox.";
-          messageElem.className = "success-message";
-        } else {
-          messageElem.textContent = "Email not found. Please try again.";
-          messageElem.className = "error-message";
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        messageElem.textContent = "An error occurred. Please try again later.";
+      if (resetPassword(email)) {
+        messageElem.textContent = "Password reset email sent. Please check your inbox.";
+        messageElem.className = "success-message";
+        messageElem.style.display = "block"; // Make message visible
+      } else {
+        messageElem.textContent = "Email not found. Please try again.";
         messageElem.className = "error-message";
-      } finally {
-        // Show message and restore button state
-        messageElem.style.display = "block";
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = 'Reset Password';
-        }
+        messageElem.style.display = "block"; // Make message visible
       }
     });
   }
@@ -396,16 +374,6 @@ async function resetPassword(email) {
     
     if (response.ok) {
       console.log('Password reset initiated for:', email);
-      
-      // In development mode, simulate a reset email by redirecting with the token in URL
-      // In production, this would be sent via email
-      if (data.resetToken && window.location.hostname === 'localhost') {
-        // For testing purposes only - in production this would be an email link
-        setTimeout(() => {
-          window.location.href = `reset-password.html?token=${data.resetToken}`;
-        }, 2000);
-      }
-      
       return true;
     } else {
       console.error('Password reset failed:', data.message);

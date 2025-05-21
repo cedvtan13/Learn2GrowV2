@@ -51,7 +51,7 @@ router.post('/register', async (req, res) => {
 });
 
 /**
- * @desc    Check if email exists and generate reset token
+ * @desc    Check if email exists for password reset
  * @route   POST /api/users/forgot-password
  * @access  Public
  */
@@ -70,41 +70,11 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(404).json({ message: 'Email not found.' });
     }
 
-    // Generate a reset token (valid for 1 hour)
-    const resetToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || 'dev-secret-key',
-      { expiresIn: '1h' }
-    );
-    
-    // Store the reset token in the user's document with an expiry
-    user.resetToken = resetToken;
-    user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
-    await user.save();
-
-    try {
-      // Import the email service
-      const { sendPasswordResetEmail } = await import('../utils/resendEmailService.js');
-      
-      // Send password reset email
-      await sendPasswordResetEmail(user.name, user.email, resetToken);
-      
-      return res.status(200).json({ 
-        message: 'Password reset instructions have been sent to your email.',
-        // For development purposes, return the token directly
-        ...(process.env.NODE_ENV !== 'production' && { resetToken })
-      });
-    } catch (emailError) {
-      console.error('Error sending password reset email:', emailError);
-      
-      // Even if email fails, return success to the user
-      // This prevents email enumeration attacks
-      return res.status(200).json({ 
-        message: 'If your email exists in our system, password reset instructions have been sent.',
-        // For development purposes, return the token directly
-        ...(process.env.NODE_ENV !== 'production' && { resetToken })
-      });
-    }
+    // In a full implementation, we'd generate a token and send an email here
+    // For now, just return success to indicate the email was found
+    return res.status(200).json({ 
+      message: 'Password reset instructions have been sent to your email.' 
+    });
   } catch (err) {
     console.error('Error in forgot password:', err);
     return res.status(500).json({ message: 'Server error' });
@@ -153,55 +123,6 @@ router.get('/profile', protect, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
-  }
-});
-
-/**
- * @desc    Reset password with token
- * @route   POST /api/users/reset-password
- * @access  Public
- */
-router.post('/reset-password', async (req, res) => {
-  try {
-    const { token, password } = req.body;
-    
-    if (!token || !password) {
-      return res.status(400).json({ message: 'Token and password are required.' });
-    }
-
-    // Verify the token
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
-    } catch (err) {
-      return res.status(400).json({ message: 'Invalid or expired token.' });
-    }
-
-    // Find the user with this token and ensure it hasn't expired
-    const user = await User.findOne({
-      _id: decoded.userId,
-      resetToken: token,
-      resetTokenExpiry: { $gt: Date.now() }
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired token.' });
-    }
-
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Update the user's password and clear the reset token fields
-    user.password = hashedPassword;
-    user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
-    await user.save();
-
-    return res.status(200).json({ message: 'Password has been reset successfully.' });
-  } catch (err) {
-    console.error('Error in reset password:', err);
-    return res.status(500).json({ message: 'Server error' });
   }
 });
 

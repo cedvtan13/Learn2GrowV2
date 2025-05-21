@@ -196,7 +196,7 @@ router.post('/upload', upload.single('image'), (req, res) => {
 /**
  * @desc    Delete a post
  * @route   DELETE /api/posts/:id
- * @access  Private (Admin or post author only)
+ * @access  Private
  */
 router.delete('/:id', async (req, res) => {
   try {
@@ -206,8 +206,8 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    // Check if user is the author of the post or an admin
-    if (post.author.toString() !== req.user.userId && req.user.role !== 'Admin') {
+    // Check if user is the author of the post
+    if (post.author.toString() !== req.user.userId) {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
     }
     

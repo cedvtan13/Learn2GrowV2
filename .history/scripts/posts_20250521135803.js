@@ -8,7 +8,6 @@ function debugAuthStatus() {
   if (currentUser) {
     console.log('User:', currentUser.name);
     console.log('Email:', currentUser.email);
-    console.log('Role:', currentUser.role);
     console.log('Token exists:', !!currentUser.token);
     if (currentUser.token) {
       console.log('Token preview:', currentUser.token.substring(0, 20) + '...');
@@ -28,7 +27,7 @@ function debugAuthStatus() {
   // Update form status
   if (formStatus) {
     if (isAuthenticated) {
-      formStatus.textContent = `Ready to post as ${currentUser.name} (${currentUser.role})`;
+      formStatus.textContent = `Ready to post as ${currentUser.name}`;
       formStatus.style.color = 'green';
     } else {
       formStatus.textContent = 'Not logged in or token missing';
@@ -45,7 +44,7 @@ function debugAuthStatus() {
   // Update authentication status text
   if (authStatusText) {
     if (isAuthenticated) {
-      authStatusText.textContent = `Logged in as ${currentUser.name} (${currentUser.role})`;
+      authStatusText.textContent = `Logged in as ${currentUser.name}`;
       authStatusText.style.color = 'green';
     } else {
       authStatusText.textContent = 'Not authenticated';
@@ -469,27 +468,15 @@ async function initializePostsFunctionality() {
       if (canCreatePosts) {
         postCreationSection.style.display = 'block';
       } else {
-        // Hide the post creation form for sponsors
         postCreationSection.style.display = 'none';
-        
         // Add a message explaining that sponsors can't create posts
-        // First, check if we've already added the message
-        const existingSponsorMessage = document.querySelector('.sponsor-message');        if (!existingSponsorMessage) {
-          const sponsorMessage = document.createElement('div');
-          sponsorMessage.className = 'sponsor-message';
-          sponsorMessage.innerHTML = `
-            <h3>Welcome, Sponsor!</h3>
-          `;
-          // Insert at the beginning of posts-content
-          postsContent.insertBefore(sponsorMessage, postsContent.firstChild);
-          
-          // Remove the element completely after animation ends (6 seconds total)
-          setTimeout(() => {
-            if (sponsorMessage.parentNode) {
-              sponsorMessage.parentNode.removeChild(sponsorMessage);
-            }
-          }, 6000);
-        }
+        const sponsorMessage = document.createElement('div');
+        sponsorMessage.className = 'sponsor-message';
+        sponsorMessage.innerHTML = `
+          <h3>Welcome, Sponsor!</h3>
+          <p>As a sponsor, you can view and support recipient stories, but cannot create posts.</p>
+        `;
+        postsContent.insertBefore(sponsorMessage, postsContent.firstChild);
       }
     }
   } else {
