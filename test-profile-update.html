@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Update Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+            border-bottom: 2px solid #f1f1f1;
+            padding-bottom: 10px;
+        }
+        section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #555;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #profileImage {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 50%;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .result {
+            margin-top: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Profile Update Test Page</h1>
+    
+    <section id="loginSection">
+        <h2>Step 1: Login</h2>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="test@example.com">
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" value="password123">
+        </div>
+        <button id="loginBtn">Login</button>
+        <div id="loginResult" class="result"></div>
+    </section>
+    
+    <section id="profileSection" style="display: none;">
+        <h2>Step 2: Update Profile</h2>
+        <div id="currentUser"></div>
+        <img id="profileImage" src="../images/default-profile.jpg" alt="Profile Image">
+        <div>
+            <label for="nameInput">Name:</label>
+            <input type="text" id="nameInput">
+        </div>
+        <div>
+            <label for="profilePicture">Profile Picture:</label>
+            <input type="file" id="profilePicture" accept="image/*">
+        </div>
+        <button id="updateProfileBtn">Update Profile</button>
+        <div id="updateResult" class="result"></div>
+    </section>
+    
+    <section id="passwordSection" style="display: none;">
+        <h2>Step 3: Change Password</h2>
+        <div>
+            <label for="currentPasswordInput">Current Password:</label>
+            <input type="password" id="currentPasswordInput">
+        </div>
+        <div>
+            <label for="newPasswordInput">New Password:</label>
+            <input type="password" id="newPasswordInput">
+        </div>
+        <button id="changePasswordBtn">Change Password</button>
+        <div id="passwordResult" class="result"></div>
+    </section>
+    
+    <script>
+        // Global variables
+        let authToken = '';
+        let userId = '';
+        let userName = '';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get DOM elements
+            const loginBtn = document.getElementById('loginBtn');
+            const updateProfileBtn = document.getElementById('updateProfileBtn');
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
+            const profileImage = document.getElementById('profileImage');
+            const profilePictureInput = document.getElementById('profilePicture');
+            
+            // Event listeners
+            loginBtn.addEventListener('click', login);
+            updateProfileBtn.addEventListener('click', updateProfile);
+            changePasswordBtn.addEventListener('click', changePassword);
+            profilePictureInput.addEventListener('change', previewImage);
+            
+            // Functions
+            async function login() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const resultElement = document.getElementById('loginResult');
+                
+                resultElement.textContent = 'Logging in...';
+                
+                try {
+                    const response = await fetch('/api/users/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Login failed');
+                    }
+                    
+                    // Store token and user ID
+                    authToken = data.token;
+                    userId = data._id;
+                    userName = data.name;
+                    
+                    // Update UI
+                    resultElement.textContent = 'Login successful!';
+                    document.getElementById('profileSection').style.display = 'block';
+                    document.getElementById('passwordSection').style.display = 'block';
+                    document.getElementById('currentUser').textContent = `Logged in as: ${data.name} (${data.email})`;
+                    document.getElementById('nameInput').value = data.name;
+                    document.getElementById('currentPasswordInput').value = password;
+                    
+                    // Load profile image if available
+                    if (data.profile && data.profile.profilePicture) {
+                        profileImage.src = data.profile.profilePicture;
+                    }
+                    
+                } catch (error) {
+                    resultElement.textContent = `Error: ${error.message}`;
+                }
+            }
+            
+            function previewImage(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profileImage.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+            
+            async function updateProfile() {
+                const name = document.getElementById('nameInput').value;
+                const resultElement = document.getElementById('updateResult');
+                
+                resultElement.textContent = 'Updating profile...';
+                
+                try {
+                    const updateData = { name };
+                    
+                    // Add profile picture if uploaded
+                    if (profilePictureInput.files.length > 0) {
+                        updateData.profilePicture = profileImage.src;
+                    }
+                    
+                    const response = await fetch('/api/users/profile/update', {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Update failed');
+                    }
+                    
+                    resultElement.textContent = 'Profile updated successfully!';
+                    userName = data.name;
+                    document.getElementById('currentUser').textContent = `Logged in as: ${data.name} (${data.email})`;
+                    
+                } catch (error) {
+                    resultElement.textContent = `Error: ${error.message}`;
+                }
+            }
+            
+            async function changePassword() {
+                const currentPassword = document.getElementById('currentPasswordInput').value;
+                const newPassword = document.getElementById('newPasswordInput').value;
+                const resultElement = document.getElementById('passwordResult');
+                
+                resultElement.textContent = 'Changing password...';
+                
+                try {
+                    const response = await fetch('/api/users/change-password', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            currentPassword,
+                            newPassword
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Password change failed');
+                    }
+                    
+                    resultElement.textContent = 'Password changed successfully!';
+                    
+                } catch (error) {
+                    resultElement.textContent = `Error: ${error.message}`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

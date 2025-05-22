@@ -7,8 +7,9 @@ const userSchema = new mongoose.Schema({
   password:    { type: String, required: true },             // hash
   role:        { type: String, enum: ['Sponsor','Recipient','Admin'], required: true },  // user_type
   profile: {
-    needs:     { type: String, maxlength: 255 },             // recipient_needs
-    qrCodeUrl: { type: String },                             // for GCash QR uploads (posts feature)
+    needs:          { type: String, maxlength: 255 },        // recipient_needs
+    qrCodeUrl:      { type: String },                        // for GCash QR uploads (posts feature)
+    profilePicture: { type: String, default: '../images/default-profile.jpg' } // profile picture URL
   },
   resetToken:       { type: String },
   resetTokenExpiry: { type: Date },

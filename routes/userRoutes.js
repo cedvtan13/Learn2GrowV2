@@ -483,7 +483,7 @@ router.get('/:userId', protect, async (req, res) => {
     const user = await User.findById(userId)
       .select('_id name email profile role createdAt')
       .lean();
-      if (!user) {
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     
@@ -491,6 +491,47 @@ router.get('/:userId', protect, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error('Error fetching user by ID:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @desc    Update user profile (name and profile picture)
+ * @route   PUT /api/users/profile/update
+ * @access  Private
+ */
+router.put('/profile/update', protect, async (req, res) => {
+  try {
+    const userId = req.user.userId; // Get user ID from auth middleware
+    const { name, profilePicture } = req.body;
+    
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Update user data
+    if (name) user.name = name;
+    if (profilePicture) {
+      // If profile doesn't exist, create it
+      if (!user.profile) user.profile = {};
+      user.profile.profilePicture = profilePicture;
+    }
+    
+    // Save the updated user
+    const updatedUser = await user.save();
+    
+    // Return updated user without sensitive data
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      profile: updatedUser.profile
+    });
+  } catch (err) {
+    console.error('Error updating user profile:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -556,6 +597,53 @@ router.delete('/:userId', protect, admin, async (req, res) => {
     res.json({ message: 'User deleted successfully' });
   } catch (err) {
     console.error('Error deleting user:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @desc    Change user password
+ * @route   POST /api/users/change-password
+ * @access  Private
+ */
+router.post('/change-password', protect, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = req.body;
+    
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required' });
+    }
+    
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+    
+    // Validate new password
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    }
+    
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    
+    // Update password
+    user.password = hashedPassword;
+    await user.save();
+    
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Error changing password:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
