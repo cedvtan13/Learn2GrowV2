@@ -1,7 +1,7 @@
 // minimal-test-email.js
 
 import dotenv from 'dotenv';
-import { sendEmail } from './utils/resendEmailService.js';
+import { sendEmail } from './utils/emailJSService.js';
 
 dotenv.config();
 

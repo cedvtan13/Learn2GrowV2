@@ -285,10 +285,8 @@ router.post('/request-recipient', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
       try {      // Import the models and services
       const RecipientRequest = (await import('../models/recipientRequestModel.js')).default;
-      
-      // IMPORTANT: Import email verification from emailJSService and other functions from resendEmailService
-      const { sendNewRecipientVerificationEmail } = await import('../utils/emailJSService.js');
-      const { sendExistingUserEmail } = await import('../utils/resendEmailService.js');
+        // Import email services from emailJSService
+      const { sendNewRecipientVerificationEmail, sendExistingUserEmail } = await import('../utils/emailJSService.js');
       
       // Check if user exists
       const exists = await User.findOne({ email });
